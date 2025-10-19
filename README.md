@@ -1,4 +1,4 @@
-# Word Search Constructor
+# golang-WoSeCon: A Word Search Constructor library
 
 This is based off of the WeSoCon algorithm desribed in
 [this article](http://ijses.com/wp-content/uploads/2022/01/68-IJSES-V6N1.pdf),
