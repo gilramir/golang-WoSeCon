@@ -1,3 +1,8 @@
+// Copyright (c) 2025 by Gilbert Ramirez <gram@alumni.rice.edu>.
+// All rights reserved.
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+
 package wosecon
 
 import (
