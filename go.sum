@@ -1,3 +1,5 @@
+github.com/gilramir/gocheck-extra v1.0.0 h1:nxZuK0piaDFGox0mvM7BJisLglw68NIF7SL0gLNwxEU=
+github.com/gilramir/gocheck-extra v1.0.0/go.mod h1:zkcnas8IWSY6hq7nvjWYgADshh20CseIq9xFBa7wfy8=
 github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
