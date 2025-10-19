@@ -70,8 +70,7 @@ func IsNilDirectedLocation(d directedLocation) bool {
 	return d.col == -1 || d.row == -1
 }
 
-// XXX - can I make this private?
-type WordSearchConstructor struct {
+type wordSearchConstructor struct {
 	numCols            int
 	numRows            int
 	wordInfos          []*wordInfo
@@ -88,7 +87,7 @@ type WordSearchConstructor struct {
 	fillerRunes []rune
 }
 
-func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, opts ...WordSearchOption) error {
+func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, opts ...WordSearchOption) error {
 
 	s.numCols = numCols
 	s.numRows = numRows
@@ -153,7 +152,7 @@ func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, o
 }
 
 // The main loop of the algorithm
-func (s *WordSearchConstructor) construct() error {
+func (s *wordSearchConstructor) construct() error {
 
 	s.locator.initialize(s.numCols, s.numRows, s.possibleDirections, s.rng)
 
@@ -185,7 +184,7 @@ func (s *WordSearchConstructor) construct() error {
 }
 
 // Place one word into the puzzle. If it cannot, returns false.
-func (s *WordSearchConstructor) locateOne(currentWord *wordInfo) bool {
+func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	//	log.Printf("locateOne %s mode=%s", currentWord.text, string(s.mode))
 
 	var localLocator *randomLocator
@@ -215,7 +214,7 @@ func (s *WordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 
 // Will this word fit in the puzzle at this directedLocation?
 // If so, the wordInfo's placement is updated
-func (s *WordSearchConstructor) validPlacement(wordInfo *wordInfo, location directedLocation) bool {
+func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location directedLocation) bool {
 
 	/*
 		log.Printf("validPlacement %s trying %d,%d,%s", wordInfo.text,
@@ -293,10 +292,10 @@ func (s *WordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	return true
 }
 
-func (s *WordSearchConstructor) isCellAvailable(col, row int) bool {
+func (s *wordSearchConstructor) isCellAvailable(col, row int) bool {
 	return s.cellMatrix.isAvailable(col, row, s.numCols)
 }
 
-func (s *WordSearchConstructor) setCellUsed(col, row int) {
+func (s *wordSearchConstructor) setCellUsed(col, row int) {
 	s.cellMatrix.setUsed(col, row, s.numCols)
 }

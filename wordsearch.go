@@ -41,9 +41,9 @@ func (s WordPlacement) DirectionString() string {
 	return DirectionString(s.Direction)
 }
 
-// Take a successful WordSearchConstructor,
+// Take a successful wordSearchConstructor,
 // and return a WordSearch result which will be sent back to the caller
-func (s *WordSearchConstructor) translateToWordSearch() *WordSearch {
+func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 
 	ws := &WordSearch{
 		NumCols:        s.numCols,

@@ -21,7 +21,7 @@ const (
 
 // Construct a WordSearch
 func Construct(numCols int, numRows int, words []string, opts ...WordSearchOption) (*WordSearch, error) {
-	var constructor WordSearchConstructor
+	var constructor wordSearchConstructor
 
 	if numRows < 4 || numCols < 4 {
 		return nil, ErrSmallerThanMinimumSize

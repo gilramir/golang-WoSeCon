@@ -5,31 +5,31 @@
 
 package wosecon
 
-type WordSearchOption func(*WordSearchConstructor) error
+type WordSearchOption func(*wordSearchConstructor) error
 
 func AddNaturalLTRDirections() WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= NaturalLTRDirections
 		return nil
 	}
 }
 
 func AddUnnaturalDirections() WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= UnnaturalLTRDirections
 		return nil
 	}
 }
 
 func AddDirection(direction Direction) WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= direction
 		return nil
 	}
 }
 
 func UseAllDirections() WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections = AllDirections
 		return nil
 	}
@@ -39,7 +39,7 @@ func UseAllDirections() WordSearchOption {
 // Never produce a WordSearch that has these words
 // in *any* direction
 func PreventBadWords(badWords []string) WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.badWords = badWords
 		return nil
 	}
@@ -48,7 +48,7 @@ func PreventBadWords(badWords []string) WordSearchOption {
 
 // Initialize the Constructor with this random seed
 func RandomSeed(seed int64) WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.randomSeed = seed
 		constructor.randomSeedGiven = true
 		return nil
@@ -58,7 +58,7 @@ func RandomSeed(seed int64) WordSearchOption {
 // Use the runes in this string for the filler. Every rune has
 // an equal chance of being used
 func FillEquallyString(filler string) WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.fillerRunes = []rune(filler)
 		return nil
 	}
@@ -67,7 +67,7 @@ func FillEquallyString(filler string) WordSearchOption {
 // Use the runes in this slice for the filler. Every rune has
 // an equal chance of being used
 func FillEquallyRuneSlice(filler []rune) WordSearchOption {
-	return func(constructor *WordSearchConstructor) error {
+	return func(constructor *wordSearchConstructor) error {
 		constructor.fillerRunes = make([]rune, len(filler))
 		copy(constructor.fillerRunes, filler)
 		return nil
