@@ -16,6 +16,7 @@ func (e ErrorString) Error() string {
 const (
 	ErrCannotFitWords         ErrorString = "the words cannot be placed into this size of grid"
 	ErrSmallerThanMinimumSize ErrorString = "the grid must be at least 4x4"
+	ErrWordIsTooLong          ErrorString = "at least one word is larger than the grid dimensions"
 )
 
 // Construct a WordSearch

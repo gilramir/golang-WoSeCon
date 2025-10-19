@@ -94,6 +94,7 @@ func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, o
 	// Use the list of words (strings) from the user
 	// to create our wordInfo objects
 	s.wordInfos = make([]*wordInfo, len(words))
+
 	for i, wordString := range words {
 		s.wordInfos[i] = newWordInfo(wordString)
 	}
@@ -109,6 +110,21 @@ func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, o
 	// If no possibleDirections were given, use the default
 	if s.possibleDirections == 0 {
 		s.possibleDirections = NaturalLTRDirections
+	}
+
+	// Is any one word bigger than the grid?
+	var maxWordSize int
+	if s.possibleDirections&(goesUp|goesDown) != 0 {
+		maxWordSize = numRows
+	}
+	if s.possibleDirections&(goesLTR|goesRTL) != 0 {
+		maxWordSize = max(maxWordSize, numCols)
+	}
+
+	for _, wordInfo := range s.wordInfos {
+		if wordInfo.runeLen > maxWordSize {
+			return ErrWordIsTooLong
+		}
 	}
 
 	// Initialize the random number generator if given a seed
@@ -238,10 +254,10 @@ func (s *WordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	} // else vetical
 
 	// Does it fit?
-	if endCol < 0 || endCol >= s.numCols || endRow < 0 || endRow >= s.numRows {
+	if endCol < 0 || endCol > s.numCols || endRow < 0 || endRow > s.numRows {
 		/*
-			log.Printf("validPlacement %s doesn't fit; endCol=%d endRow=%d", wordInfo.text,
-				endCol, endRow)
+			log.Printf("validPlacement %s doesn't fit; %s start=%d,%d end=%d,%d", wordInfo.text,
+				DirectionString(location.direction), startCol, startRow, endCol, endRow)
 		*/
 		return false
 	}
