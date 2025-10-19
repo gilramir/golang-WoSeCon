@@ -20,7 +20,7 @@ const (
 	LTRDescending Direction = 4
 	LTRAscending  Direction = 8
 
-	// Unnatrual directions for LTR languages
+	// Unnatural directions for LTR languages
 	Up            Direction = 16
 	RTLHorizontal Direction = 32
 	RTLDescending Direction = 64

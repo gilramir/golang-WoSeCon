@@ -1,6 +1,7 @@
 package wosecon
 
 import (
+	"math/rand"
 	"slices"
 )
 
@@ -12,10 +13,17 @@ type WordSearch struct {
 	// The solution, as words and placments (location+direction)
 	WordPlacements map[string]WordPlacement
 
-	// The soluation, as runes
+	// The solution, as runes
 	// First dimension is y (rows)
 	// Second dimension is x (column)
 	SolutionRows [][]rune
+
+	// The puzzle, as runes
+	// Every cell is filled. It has the solution
+	// an the filler, together.
+	// First dimension is y (rows)
+	// Second dimension is x (column)
+	PuzzleRows [][]rune
 }
 
 type WordPlacement struct {
@@ -38,13 +46,15 @@ func (s *WordSearchConstructor) translateToWordSearch() *WordSearch {
 		WordPlacements: make(map[string]WordPlacement),
 		// Allocate the rows
 		SolutionRows: make([][]rune, s.numRows),
+		PuzzleRows:   make([][]rune, s.numRows),
 	}
 	// Allocate the columns, filled with SPACE characteers
 	for row := 0; row < s.numRows; row++ {
 		ws.SolutionRows[row] = slices.Repeat([]rune{' '}, s.numCols)
+		ws.PuzzleRows[row] = slices.Repeat([]rune{' '}, s.numCols)
 	}
 
-	// Fill in the solution
+	// Fill in the solution and puzzle
 	for _, wordInfo := range s.wordInfos {
 		dl := wordInfo.placement
 		ws.WordPlacements[wordInfo.text] = WordPlacement{
@@ -75,10 +85,22 @@ func (s *WordSearchConstructor) translateToWordSearch() *WordSearch {
 		// Iterate rune by rune in the string
 		for _, r := range wordInfo.text {
 			ws.SolutionRows[row][col] = r
+			ws.PuzzleRows[row][col] = r
 			col += colAdj
 			row += rowAdj
 		}
+	}
 
+	// Add the filler
+	if len(s.fillerRunes) > 0 {
+		for col := 0; col < ws.NumCols; col++ {
+			for row := 0; row < ws.NumRows; row++ {
+				if s.isCellAvailable(col, row) {
+					i := rand.Intn(len(s.fillerRunes))
+					ws.PuzzleRows[row][col] = s.fillerRunes[i]
+				}
+			}
+		}
 	}
 
 	return ws

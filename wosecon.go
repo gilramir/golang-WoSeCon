@@ -70,6 +70,7 @@ func IsNilDirectedLocation(d directedLocation) bool {
 	return d.col == -1 || d.row == -1
 }
 
+// XXX - can I make this private?
 type WordSearchConstructor struct {
 	numCols            int
 	numRows            int
@@ -83,6 +84,8 @@ type WordSearchConstructor struct {
 	randomSeed      int64
 	randomSeedGiven bool
 	rng             *rand.Rand
+
+	fillerRunes []rune
 }
 
 func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, opts ...WordSearchOption) error {

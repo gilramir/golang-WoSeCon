@@ -2,12 +2,15 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	wosecon "github.com/gilramir/golang-WoSeCon"
+)
+
+const (
+	alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 func (s *Program) run() error {
@@ -17,21 +20,39 @@ func (s *Program) run() error {
 		return err
 	}
 
-	ws, err := wosecon.Construct(s.NumCols, s.NumRows, words)
+	ws, err := wosecon.Construct(s.NumCols, s.NumRows, words,
+		wosecon.FillEquallyString(alphabet))
 	if err != nil {
 		return err
 	}
 
+	for _, word := range words {
+		placement, has := ws.WordPlacements[word]
+		if !has {
+			return fmt.Errorf("%s is not in WordPlacements", word)
+		}
+		fmt.Printf("%s - col:%d row:%d direction:%s\n", word,
+			placement.Col, placement.Row, placement.DirectionString())
+	}
+	fmt.Println()
+
+	s.printRows(ws.SolutionRows)
+	s.printRows(ws.PuzzleRows)
+
+	return nil
+}
+
+func (s *Program) printRows(rows [][]rune) {
 	// Header
 	fmt.Print("   ")
-	for col := 0; col < ws.NumCols; col++ {
+	for col := 0; col < len(rows[0]); col++ {
 		fmt.Printf("%2d ", col)
 	}
 	fmt.Println()
 	fmt.Println()
 
 	// Body
-	for row, rowSlice := range ws.SolutionRows {
+	for row, rowSlice := range rows {
 		fmt.Printf("%2d ", row)
 		for _, cellRune := range rowSlice {
 			fmt.Printf(" %s ", string(cellRune))
@@ -41,23 +62,6 @@ func (s *Program) run() error {
 	}
 
 	fmt.Println()
-
-	hasError := false
-	for _, word := range words {
-		placement, has := ws.WordPlacements[word]
-		if !has {
-			fmt.Printf("ERROR: %s is not in WordPlacements\n", word)
-			hasError = true
-		}
-		fmt.Printf("%s - col:%d row:%d direction:%s\n", word,
-			placement.Col, placement.Row, placement.DirectionString())
-	}
-
-	if hasError {
-		return errors.New("Invalid wordSearchConstructor data")
-	}
-
-	return nil
 }
 
 func (s *Program) read_input_words() ([]string, error) {
