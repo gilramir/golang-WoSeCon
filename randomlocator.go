@@ -61,9 +61,10 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 	// The cells inside (non-border) of the grid can go in all directions
 	// Initialize those first
 	possibleDirectionsSlice := getIndividualDirections(possibleDirections)
-	numInnerCells := (numCols - 1) * (numRows - 1) * len(possibleDirectionsSlice)
-	s.availableLocations = make([]directedLocation, numInnerCells)
-	i := 0
+
+	// We over-allocate capacity a bit, as the corners and edges don't need as many
+	// directions, but that's ok
+	s.availableLocations = make([]directedLocation, 0, numCols*numRows*len(possibleDirectionsSlice))
 	for col := 1; col < numCols-1; col++ {
 		for row := 1; row < numRows-1; row++ {
 			for _, direction := range possibleDirectionsSlice {
@@ -72,8 +73,8 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 					row:       row,
 					direction: direction,
 				}
-				s.availableLocations[i] = d
-				i++
+				s.availableLocations = append(s.availableLocations, d)
+				//				fmt.Printf("setIn %d,%d %s\n", col, row, DirectionString(direction))
 			}
 		}
 	}
@@ -104,6 +105,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 				direction: direction,
 			}
 			s.availableLocations = append(s.availableLocations, d)
+			//			fmt.Printf("setTr %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
 		}
 	}
 
@@ -127,6 +129,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 				direction: direction,
 			}
 			s.availableLocations = append(s.availableLocations, d)
+			//			fmt.Printf("setBr %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
 		}
 	}
 
@@ -141,6 +144,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 				direction: direction,
 			}
 			s.availableLocations = append(s.availableLocations, d)
+			//			fmt.Printf("setLc %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
 		}
 	}
 
@@ -155,6 +159,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 				direction: direction,
 			}
 			s.availableLocations = append(s.availableLocations, d)
+			//			fmt.Printf("setRc %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
 		}
 	}
 
@@ -162,4 +167,10 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 	rng.Shuffle(len(s.availableLocations), func(i, j int) {
 		s.availableLocations[i], s.availableLocations[j] = s.availableLocations[j], s.availableLocations[i]
 	})
+
+	/*
+		for i, d := range s.availableLocations {
+			fmt.Printf("#%d. %d,%d %s\n", i+1, d.col, d.row, DirectionString(d.direction))
+		}
+	*/
 }

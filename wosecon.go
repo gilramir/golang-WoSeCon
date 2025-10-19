@@ -8,6 +8,7 @@ package wosecon
 import (
 	"math/rand"
 	"sort"
+	"unicode/utf8"
 )
 
 // The algorithm works in 2 modoes, forward or backward
@@ -20,8 +21,18 @@ const (
 
 type wordInfo struct {
 	text            string
+	runeLen         int
 	placement       directedLocation
 	testedLocations []directedLocation
+}
+
+func newWordInfo(text string) *wordInfo {
+	return &wordInfo{
+		text:            text,
+		runeLen:         utf8.RuneCountInString(text),
+		placement:       nilDirectedLocation(),
+		testedLocations: make([]directedLocation, 0),
+	}
 }
 
 func (s *wordInfo) getPlacement() directedLocation {
@@ -84,9 +95,7 @@ func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, o
 	// to create our wordInfo objects
 	s.wordInfos = make([]*wordInfo, len(words))
 	for i, wordString := range words {
-		s.wordInfos[i] = &wordInfo{
-			text: wordString,
-		}
+		s.wordInfos[i] = newWordInfo(wordString)
 	}
 
 	// Apply the options
@@ -112,20 +121,15 @@ func (s *WordSearchConstructor) init(numCols int, numRows int, words []string, o
 	// Stable sort words, longest to shortest
 	// If the same length, then in alphbetical order
 	sort.Slice(s.wordInfos, func(i, j int) bool {
-		wi := s.wordInfos[i].text
-		wj := s.wordInfos[j].text
-		if len(wi) == len(wj) {
-			return wi < wj
+		wi := s.wordInfos[i]
+		wj := s.wordInfos[j]
+		if wi.runeLen == wj.runeLen {
+			return wi.text < wj.text
 		} else {
 			// Descending order
-			return len(wj) < len(wi)
+			return wj.runeLen < wi.runeLen
 		}
 	})
-	return nil
-}
-
-func (s *WordSearchConstructor) translateToWordSearch() *WordSearch {
-	// TODO
 	return nil
 }
 
@@ -163,6 +167,7 @@ func (s *WordSearchConstructor) construct() error {
 
 // Place one word into the puzzle. If it cannot, returns false.
 func (s *WordSearchConstructor) locateOne(currentWord *wordInfo) bool {
+	//	log.Printf("locateOne %s mode=%s", currentWord.text, string(s.mode))
 
 	var localLocator *randomLocator
 
@@ -189,23 +194,19 @@ func (s *WordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	return false
 }
 
-const (
-	goesDown = LTRDescending | RTLDescending | Down
-	goesUp   = LTRAscending | RTLAscending | Up
-	goesLTR  = LTRDescending | LTRAscending | LTRHorizontal
-	goesRTL  = RTLDescending | RTLAscending | RTLHorizontal
-)
-
 // Will this word fit in the puzzle at this directedLocation?
 // If so, the wordInfo's placement is updated
 func (s *WordSearchConstructor) validPlacement(wordInfo *wordInfo, location directedLocation) bool {
 
-	// Pechance did we already test this location?
-	if wordInfo.testedLocations != nil {
-		for _, testedLocation := range wordInfo.testedLocations {
-			if testedLocation.equals(location) {
-				return false
-			}
+	/*
+		log.Printf("validPlacement %s trying %d,%d,%s", wordInfo.text,
+			location.col, location.row, DirectionString(location.direction))
+	*/
+
+	// Perchance did we already test this location?
+	for _, testedLocation := range wordInfo.testedLocations {
+		if testedLocation.equals(location) {
+			return false
 		}
 	}
 
@@ -220,32 +221,37 @@ func (s *WordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 
 	// Find endRow
 	if location.direction&goesDown > 0 {
-		endRow = startRow + len(wordInfo.text)
+		endRow = startRow + wordInfo.runeLen
 		rowAdj = 1
 	} else if location.direction&goesUp > 0 {
-		endRow = startRow - len(wordInfo.text)
+		endRow = startRow - wordInfo.runeLen
 		rowAdj = -1
 	} // else horizontal
 
 	// Find endCol
 	if location.direction&goesLTR != 0 {
-		endCol = startCol + len(wordInfo.text)
+		endCol = startCol + wordInfo.runeLen
 		colAdj = 1
 	} else if location.direction&goesRTL != 0 {
-		endCol = startCol - len(wordInfo.text)
+		endCol = startCol - wordInfo.runeLen
 		colAdj = -1
 	} // else vetical
 
 	// Does it fit?
 	if endCol < 0 || endCol >= s.numCols || endRow < 0 || endRow >= s.numRows {
+		/*
+			log.Printf("validPlacement %s doesn't fit; endCol=%d endRow=%d", wordInfo.text,
+				endCol, endRow)
+		*/
 		return false
 	}
 
 	// Check if each coordinate is unused
 	col := startCol
 	row := startRow
-	for i := 0; i < len(wordInfo.text); i++ {
+	for i := 0; i < wordInfo.runeLen; i++ {
 		if !s.isCellAvailable(col, row) {
+			// log.Printf("validPlacement %s overlap at col=%d row=%d", wordInfo.text, col, row)
 			return false
 		}
 		col += colAdj
@@ -258,12 +264,13 @@ func (s *WordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Mark the cells as used
 	col = startCol
 	row = startRow
-	for i := 0; i < len(wordInfo.text); i++ {
+	for i := 0; i < wordInfo.runeLen; i++ {
 		s.setCellUsed(col, row)
 		col += colAdj
 		row += rowAdj
 	}
 
+	//log.Printf("validPlacement %s chosen, col=%d row=%d", wordInfo.text, startCol, startRow)
 	return true
 }
 

@@ -5,8 +5,14 @@
 
 package wosecon
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Direction uint8
 
+// Public
 const (
 	// Natural directions for LTR languages
 	Down          Direction = 1
@@ -24,6 +30,14 @@ const (
 	UnnaturalLTRDirections = Up | RTLHorizontal | RTLDescending | RTLAscending
 
 	AllDirections = NaturalLTRDirections | UnnaturalLTRDirections
+)
+
+// Private
+const (
+	goesDown = LTRDescending | RTLDescending | Down
+	goesUp   = LTRAscending | RTLAscending | Up
+	goesLTR  = LTRDescending | LTRAscending | LTRHorizontal
+	goesRTL  = RTLDescending | RTLAscending | RTLHorizontal
 )
 
 // Return a slice of the directiosn set in this Direction object
@@ -47,4 +61,36 @@ func getIndividualDirections(d Direction) []Direction {
 	checkAndSet(RTLAscending)
 
 	return directions
+}
+
+func DirectionString(d Direction) string {
+	directionsSlice := getIndividualDirections(d)
+	labelsSlice := make([]string, len(directionsSlice))
+
+	for i, idir := range directionsSlice {
+		var name string
+		switch idir {
+		case Down:
+			name = "Down"
+		case LTRHorizontal:
+			name = "LTRHorizontal"
+		case LTRDescending:
+			name = "LTRDescending"
+		case LTRAscending:
+			name = "LTRAscending"
+		case Up:
+			name = "Up"
+		case RTLHorizontal:
+			name = "RTLHorizontal"
+		case RTLDescending:
+			name = "RTLDescending"
+		case RTLAscending:
+			name = "RTLAscending"
+		default:
+			panic(fmt.Sprintf("Should not reach. value=%b", idir))
+		}
+		labelsSlice[i] = name
+	}
+
+	return strings.Join(labelsSlice, ",")
 }

@@ -15,34 +15,14 @@ func (e ErrorString) Error() string {
 // The errors that Construct() can return
 const (
 	ErrCannotFitWords         ErrorString = "the words cannot be placed into this size of grid"
-	ErrSmallerThanMinimumSize ErrorString = "the grid must be at least 8x8"
+	ErrSmallerThanMinimumSize ErrorString = "the grid must be at least 4x4"
 )
-
-// The constructed word search puzzle
-type WordSearch struct {
-	NumCols int
-	NumRows int
-
-	// The solution, as words and placments (location+direction)
-	WordPlacements map[string]WordPlacement
-
-	// The soluation, as runes
-	// First dimension is x (columns)
-	// Second dimension is y (rows)
-	SolutionRuneMatrix [][]rune
-}
-
-type WordPlacement struct {
-	Col       int
-	Row       int
-	Direction Direction
-}
 
 // Construct a WordSearch
 func Construct(numCols int, numRows int, words []string, opts ...WordSearchOption) (*WordSearch, error) {
 	var constructor WordSearchConstructor
 
-	if numRows < 8 || numCols < 8 {
+	if numRows < 4 || numCols < 4 {
 		return nil, ErrSmallerThanMinimumSize
 	}
 
