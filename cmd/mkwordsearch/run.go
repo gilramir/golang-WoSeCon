@@ -26,7 +26,7 @@ func (s *Program) run() error {
 	}
 
 	ws, err := wosecon.Construct(s.NumCols, s.NumRows, words,
-		wosecon.FillEquallyString(alphabet))
+		wosecon.FillUniformlyFromString(alphabet))
 	if err != nil {
 		return err
 	}

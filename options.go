@@ -57,7 +57,7 @@ func RandomSeed(seed int64) WordSearchOption {
 
 // Use the runes in this string for the filler. Every rune has
 // an equal chance of being used
-func FillEquallyString(filler string) WordSearchOption {
+func FillUniformlyFromString(filler string) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.fillerRunes = []rune(filler)
 		return nil
@@ -66,7 +66,7 @@ func FillEquallyString(filler string) WordSearchOption {
 
 // Use the runes in this slice for the filler. Every rune has
 // an equal chance of being used
-func FillEquallyRuneSlice(filler []rune) WordSearchOption {
+func FillUniformlyFromRuneSlice(filler []rune) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.fillerRunes = make([]rune, len(filler))
 		copy(constructor.fillerRunes, filler)

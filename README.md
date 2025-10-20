@@ -39,9 +39,9 @@ import (
     wosecon "github.com/gilramir/golang-WoSeCon"
 )
 
-numColumns := 10
-numRows := 10
-words := []string{"APPLE", "BOY", "CAR"}
+numColumns := 8
+numRows := 5
+words := []string{"TOYS", "APPLE", "CAR"}
 alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 wordSearch, err := wosecon.Construct(numColumns, numRows, words,
@@ -52,3 +52,39 @@ The WordSearch object gives you the placement of each word. A placement
 is the starting colum and row, and direction of the word. It also gives
 you a matrix of runes for the solution (the puzzle with no filler), and
 the complete puzzle (solution + filler)
+
+If you print the Solution, it would look something like this:
+```
+    0  1  2  3  4  5  6  7
+
+ 0     A
+
+ 1        P  S     C
+
+ 2        Y  P     A
+
+ 3     O        L  R
+
+ 4  T              E
+```
+
+If you print the Puzzle, which has the Solution and the empty cells are filled
+randomly, you might see this:
+```
+    0  1  2  3  4  5  6  7
+
+ 0  R  A  A  L  H  B  T  T
+
+ 1  G  C  P  S  X  C  J  Y
+
+ 2  K  X  Y  P  C  A  C  D
+
+ 3  K  O  N  N  L  R  B  Z
+
+ 4  T  D  L  Q  L  E  N  E
+```
+
+You can use the cmd/mkwordsearch/mkwordsearch example tool to experiment:
+```
+./mkwordsearch 8 5 small.txt
+```
