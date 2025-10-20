@@ -45,7 +45,7 @@ words := []string{"TOYS", "APPLE", "CAR"}
 alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 wordSearch, err := wosecon.Construct(numColumns, numRows, words,
-    wosecond.FillEquallyString(alphabet))
+    wosecond.FillUniformlyFromString(alphabet))
 ```
 
 The WordSearch object gives you the placement of each word. A placement
@@ -88,3 +88,41 @@ You can use the cmd/mkwordsearch/mkwordsearch example tool to experiment:
 ```
 ./mkwordsearch 8 5 small.txt
 ```
+
+== Options
+
+When running Constructor(), you can pass it options to control its behavior.
+The options are:
+
+* **AddNaturalLTRDirections()** - this adds all Left-to-right directions,
+    and Down, to the list of possible directions for the solution.
+    This is the default, and doesn't need to be used. This adds, so it
+    can be combined with other options which also add directions.
+
+* **AddUnnaturalDirections()** - this adds all Right-to-left directions,
+    and Up, to the list of possible directions for the solution.
+
+* **AddDirection(direction Direction)** - this adds a single direction
+    to the list of possible directions for the solution. The 8 possible
+    directions are:
+ * Down
+ * LTRHorizontal
+ * LTRAscending
+ * LTRDescending
+ * Up
+ * RTLHorizontal
+ * RTLAscending
+ * RTLDescending
+
+* **UseAllDirections()** - the solution can use all 8 of the possible
+    directions.
+
+* **RandomSeed(seed int64)** - seed the random number generator. Use this
+    if you want repeatable randomness. Otherwise, the seed itself is
+    already random.
+
+* **FillUniformlyFromString(filler string)** - fill in the puzzle
+    with equally-random choices of runes from this string.
+
+* **FillUniformlyFromRuneSlice(filler []rune)** - fill in the puzzble
+    with equally-random choices of runes from this slice.
