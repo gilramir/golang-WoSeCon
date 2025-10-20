@@ -19,8 +19,15 @@ func (s *MySuite) TestRandomLocator01(c *C) {
 	locator.initialize(2, 3, Down|Up, rng)
 
 	// # of locations = # row * # cols * # directions
-	c.Assert(len(locator.availableLocations), Equals, 12)
-	c.Assert(locator.size(), Equals, 12)
+	// +-------+-------+
+	// +   D   |   D   |   2
+	// +-------+-------+
+	// +  U/D  |  U/D  |   4
+	// +-------+-------+
+	// +   U   |   U   |   2
+	// +-------+-------+
+	c.Assert(len(locator.availableLocations), Equals, 8)
+	c.Assert(locator.size(), Equals, 8)
 
 	newdl := directedLocation{
 		col:       10,
@@ -29,11 +36,11 @@ func (s *MySuite) TestRandomLocator01(c *C) {
 	}
 	locator.add(newdl)
 
-	c.Assert(locator.size(), Equals, 13)
+	c.Assert(locator.size(), Equals, 9)
 
 	// Remove it
 	locator.remove(newdl)
-	c.Assert(locator.size(), Equals, 12)
+	c.Assert(locator.size(), Equals, 8)
 
 	// It's not there to remove
 	c.Assert(func() { locator.remove(newdl) }, PanicMatches, "Should not reach.*")
@@ -45,8 +52,8 @@ func (s *MySuite) TestRandomLocator02(c *C) {
 	var locator randomLocator
 	locator.initialize(2, 3, Down|Up, rng)
 
-	// # of locations = # row * # cols * # directions
-	c.Assert(locator.size(), Equals, 12)
+	// # of locations (see TestRandomLocator01)
+	c.Assert(locator.size(), Equals, 8)
 
 	targetdl := directedLocation{
 		col:       1,
@@ -58,7 +65,7 @@ func (s *MySuite) TestRandomLocator02(c *C) {
 	c.Assert(targetdl, InSlice, locator.availableLocations)
 
 	newLocator := locator.minus([]directedLocation{targetdl})
-	c.Assert(newLocator.size(), Equals, 11)
+	c.Assert(newLocator.size(), Equals, 7)
 
 	// Now you don't
 	c.Assert(targetdl, Not(InSlice), newLocator.availableLocations)
