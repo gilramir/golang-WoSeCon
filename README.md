@@ -89,7 +89,7 @@ You can use the cmd/mkwordsearch/mkwordsearch example tool to experiment:
 ./mkwordsearch 8 5 small.txt
 ```
 
-== Options
+## Options
 
 When running Constructor(), you can pass it options to control its behavior.
 The options are:
@@ -105,14 +105,14 @@ The options are:
 * **AddDirection(direction Direction)** - this adds a single direction
     to the list of possible directions for the solution. The 8 possible
     directions are:
- * Down
- * LTRHorizontal
- * LTRAscending
- * LTRDescending
- * Up
- * RTLHorizontal
- * RTLAscending
- * RTLDescending
+    * Down
+    * LTRHorizontal
+    * LTRAscending
+    * LTRDescending
+    * Up
+    * RTLHorizontal
+    * RTLAscending
+    * RTLDescending
 
 * **UseAllDirections()** - the solution can use all 8 of the possible
     directions.
