@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 
 	wosecon "github.com/gilramir/golang-WoSeCon"
 )
@@ -25,8 +27,48 @@ func (s *Program) run() error {
 		return err
 	}
 
-	ws, err := wosecon.Construct(s.NumCols, s.NumRows, words,
-		wosecon.FillUniformlyFromString(alphabet))
+	wsOptions := make([]wosecon.WordSearchOption, 1)
+
+	if s.WeightsFilename == "" {
+		wsOptions[0] = wosecon.FillUniformlyFromString(alphabet)
+	} else {
+		// Read the weights file
+		fh, err := os.Open(s.WeightsFilename)
+		if err != nil {
+			return err
+		}
+		runeWeights := make([]wosecon.RuneWeight, 0)
+
+		scanner := bufio.NewScanner(fh)
+		lineno := 0
+		for scanner.Scan() {
+			lineno++
+			text := scanner.Text()
+			fields := strings.Fields(text)
+			if len(fields) != 2 {
+				continue
+			}
+			weight, err := strconv.ParseInt(fields[1], 10, 64)
+			if err != nil {
+				fh.Close()
+				return fmt.Errorf("In %s on line %d: %w", s.WeightsFilename, lineno, err)
+			}
+			runeWeights = append(runeWeights, wosecon.RuneWeight{
+				Rune:   []rune(fields[0])[0],
+				Weight: weight,
+			})
+		}
+		err = scanner.Err()
+		if err != nil {
+			fh.Close()
+			return err
+		}
+		fh.Close()
+
+		wsOptions[0] = wosecon.FillWeighted(runeWeights)
+	}
+
+	ws, err := wosecon.Construct(s.NumCols, s.NumRows, words, wsOptions...)
 	if err != nil {
 		return err
 	}

@@ -18,6 +18,7 @@ type ProgramOptions struct {
 	Verbose          bool
 	NumCols          int
 	NumRows          int
+	WeightsFilename  string
 	WordListFilename string
 }
 
@@ -36,6 +37,12 @@ func (s *Program) runCli() {
 	ap.Add(&argparse.Argument{
 		Switches: []string{"-v", "--verbose"},
 		Help:     "Set verbose mode",
+	})
+
+	ap.Add(&argparse.Argument{
+		Switches: []string{"-w", "--weights"},
+		Dest:     "WeightsFilename",
+		Help:     "Read weights and runes from a whitespace-separated value file. Used for filling the puzzle",
 	})
 
 	ap.Add(&argparse.Argument{

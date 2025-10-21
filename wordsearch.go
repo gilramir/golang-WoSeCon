@@ -97,16 +97,39 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 	}
 
 	// Add the filler
-	if len(s.fillerRunes) > 0 {
-		for col := 0; col < ws.NumCols; col++ {
-			for row := 0; row < ws.NumRows; row++ {
-				if s.isCellAvailable(col, row) {
-					i := rand.Intn(len(s.fillerRunes))
-					ws.PuzzleRows[row][col] = s.fillerRunes[i]
-				}
-			}
-		}
+	if len(s.fillerWeights) > 0 {
+		s.applyWeightedFiller(ws)
+	} else if len(s.fillerRunes) > 0 {
+		s.applyUniformFiller(ws)
 	}
 
 	return ws
+}
+
+func (s *wordSearchConstructor) applyUniformFiller(ws *WordSearch) {
+	for col := 0; col < ws.NumCols; col++ {
+		for row := 0; row < ws.NumRows; row++ {
+			if s.isCellAvailable(col, row) {
+				// Pick a random number, thus picking a rune
+				n := rand.Intn(len(s.fillerRunes))
+				ws.PuzzleRows[row][col] = s.fillerRunes[n]
+			}
+		}
+	}
+}
+
+func (s *wordSearchConstructor) applyWeightedFiller(ws *WordSearch) {
+	for col := 0; col < ws.NumCols; col++ {
+		for row := 0; row < ws.NumRows; row++ {
+			if s.isCellAvailable(col, row) {
+				// Pick a random number
+				rn := rand.Int63n(s.fillerWeightsSum)
+				// Find where it would fit in the slice of
+				// weights
+				n, _ := slices.BinarySearch(s.fillerWeights, rn)
+				// Use that rune
+				ws.PuzzleRows[row][col] = s.fillerRunes[n]
+			}
+		}
+	}
 }

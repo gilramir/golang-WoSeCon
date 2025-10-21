@@ -84,7 +84,14 @@ type wordSearchConstructor struct {
 	randomSeedGiven bool
 	rng             *rand.Rand
 
+	// Used for uniformly filling in the puzzle, and
+	// also as one of the data sturctures for filling in
+	// by weights
 	fillerRunes []rune
+
+	// Used for filling in the puzzle by weights
+	fillerWeights    []int64
+	fillerWeightsSum int64
 }
 
 func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, opts ...WordSearchOption) error {

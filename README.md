@@ -126,3 +126,10 @@ The options are:
 
 * **FillUniformlyFromRuneSlice(filler []rune)** - fill in the puzzble
     with equally-random choices of runes from this slice.
+
+* **FillWeighted(filler []RuneWeight)** - fill in the puzzble
+    based on weighted values. Give a slice of RuneWeight objects,
+    which are just a rune and its relative weight. The weights do not
+    need to sum up to some specific value. The code will sum the
+    weights and use their percentages to decide the probability that
+    a rune will be chosen to fill in an empty cell in the puzzle.

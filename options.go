@@ -5,6 +5,8 @@
 
 package wosecon
 
+import "sort"
+
 type WordSearchOption func(*wordSearchConstructor) error
 
 func AddNaturalLTRDirections() WordSearchOption {
@@ -68,8 +70,54 @@ func FillUniformlyFromString(filler string) WordSearchOption {
 // an equal chance of being used
 func FillUniformlyFromRuneSlice(filler []rune) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
+		// Make our own copy of the slice
 		constructor.fillerRunes = make([]rune, len(filler))
 		copy(constructor.fillerRunes, filler)
+		return nil
+	}
+}
+
+type RuneWeight struct {
+	Rune   rune
+	Weight int64
+}
+
+// Use the weighted runes in this slice for the filler. The weights
+// do not need to add up to any specific value. The Constructor will
+// sum the weights and calculate the percentages.
+func FillWeighted(filler []RuneWeight) WordSearchOption {
+	return func(constructor *wordSearchConstructor) error {
+		// Make our own temporary copy of the slice, so we can
+		// sort it without destroying the caller's slice.
+		runeWeights := make([]RuneWeight, len(filler))
+		copy(runeWeights, filler)
+
+		// Sort the slice, ascending, by weight
+		sort.Slice(runeWeights, func(i, j int) bool {
+			rwi := runeWeights[i]
+			rwj := runeWeights[j]
+			if rwi.Weight == rwj.Weight {
+				return rwi.Rune < rwj.Rune
+			} else {
+				return rwi.Weight < rwj.Weight
+			}
+		})
+
+		// Allocate our own slices
+		constructor.fillerRunes = make([]rune, len(filler))
+		constructor.fillerWeights = make([]int64, len(filler))
+
+		// Calculate the sum of all the weights, and adjust
+		// the running weight sum in each RuneWeight
+		for i, rw := range runeWeights {
+			if rw.Weight <= 0 {
+				return ErrFillerWeightNotPositive
+			}
+			constructor.fillerRunes[i] = rw.Rune
+			constructor.fillerWeightsSum += rw.Weight
+			constructor.fillerWeights[i] = constructor.fillerWeightsSum
+		}
+
 		return nil
 	}
 }
