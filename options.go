@@ -16,7 +16,7 @@ func AddNaturalLTRDirections() WordSearchOption {
 	}
 }
 
-func AddUnnaturalDirections() WordSearchOption {
+func AddUnnaturalLTRDirections() WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= UnnaturalLTRDirections
 		return nil

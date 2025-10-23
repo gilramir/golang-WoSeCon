@@ -99,7 +99,7 @@ The options are:
     This is the default, and doesn't need to be used. This adds, so it
     can be combined with other options which also add directions.
 
-* **AddUnnaturalDirections()** - this adds all Right-to-left directions,
+* **AddUnnaturalLTRDirections()** - this adds all Right-to-left directions,
     and Up, to the list of possible directions for the solution.
 
 * **AddDirection(direction Direction)** - this adds a single direction
