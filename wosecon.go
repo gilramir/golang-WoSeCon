@@ -123,10 +123,10 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, o
 
 	// Is any one word bigger than the grid?
 	var maxWordSize int
-	if s.possibleDirections&(goesUp|goesDown) != 0 {
+	if s.possibleDirections&(GoesUpward|GoesDownward) != 0 {
 		maxWordSize = numRows
 	}
-	if s.possibleDirections&(goesLTR|goesRTL) != 0 {
+	if s.possibleDirections&(GoesLTR|GoesRTL) != 0 {
 		maxWordSize = max(maxWordSize, numCols)
 	}
 
@@ -245,19 +245,19 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	var rowAdj int
 
 	// Find endRow
-	if location.direction&goesDown > 0 {
+	if location.direction&GoesDownward > 0 {
 		endRow = startRow + wordInfo.runeLen
 		rowAdj = 1
-	} else if location.direction&goesUp > 0 {
+	} else if location.direction&GoesUpward > 0 {
 		endRow = startRow - wordInfo.runeLen
 		rowAdj = -1
 	} // else horizontal
 
 	// Find endCol
-	if location.direction&goesLTR != 0 {
+	if location.direction&GoesLTR != 0 {
 		endCol = startCol + wordInfo.runeLen
 		colAdj = 1
-	} else if location.direction&goesRTL != 0 {
+	} else if location.direction&GoesRTL != 0 {
 		endCol = startCol - wordInfo.runeLen
 		colAdj = -1
 	} // else vetical

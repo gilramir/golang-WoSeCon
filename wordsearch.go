@@ -72,16 +72,16 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 		var rowAdj int
 
 		// Find endRow
-		if dl.direction&goesDown > 0 {
+		if dl.direction&GoesDownward > 0 {
 			rowAdj = 1
-		} else if dl.direction&goesUp > 0 {
+		} else if dl.direction&GoesUpward > 0 {
 			rowAdj = -1
 		} // else horizontal
 
 		// Find endCol
-		if dl.direction&goesLTR != 0 {
+		if dl.direction&GoesLTR != 0 {
 			colAdj = 1
-		} else if dl.direction&goesRTL != 0 {
+		} else if dl.direction&GoesRTL != 0 {
 			colAdj = -1
 		} // else vetical
 

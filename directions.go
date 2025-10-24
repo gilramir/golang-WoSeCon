@@ -30,14 +30,18 @@ const (
 	UnnaturalLTRDirections = Up | RTLHorizontal | RTLDescending | RTLAscending
 
 	AllDirections = NaturalLTRDirections | UnnaturalLTRDirections
-)
 
-// Private
-const (
-	goesDown = LTRDescending | RTLDescending | Down
-	goesUp   = LTRAscending | RTLAscending | Up
-	goesLTR  = LTRDescending | LTRAscending | LTRHorizontal
-	goesRTL  = RTLDescending | RTLAscending | RTLHorizontal
+	// Any downard direction
+	GoesDownward = LTRDescending | RTLDescending | Down
+
+	// Any upward direction
+	GoesUpward = LTRAscending | RTLAscending | Up
+
+	// Any left-to-right direction
+	GoesLTR = LTRDescending | LTRAscending | LTRHorizontal
+
+	// Any right-to-left direction
+	GoesRTL = RTLDescending | RTLAscending | RTLHorizontal
 )
 
 // Return a slice of the directiosn set in this Direction object
