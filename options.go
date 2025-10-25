@@ -9,6 +9,7 @@ import "sort"
 
 type WordSearchOption func(*wordSearchConstructor) error
 
+// Add all left-to-right directions (and "down")
 func AddNaturalLTRDirections() WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= NaturalLTRDirections
@@ -16,6 +17,7 @@ func AddNaturalLTRDirections() WordSearchOption {
 	}
 }
 
+// Add all right-to-left directions (and "up")
 func AddUnnaturalLTRDirections() WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= UnnaturalLTRDirections
@@ -23,6 +25,7 @@ func AddUnnaturalLTRDirections() WordSearchOption {
 	}
 }
 
+// Add a single direction
 func AddDirection(direction Direction) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= direction
@@ -30,6 +33,7 @@ func AddDirection(direction Direction) WordSearchOption {
 	}
 }
 
+// Use all directions
 func UseAllDirections() WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections = AllDirections
@@ -77,6 +81,8 @@ func FillUniformlyFromRuneSlice(filler []rune) WordSearchOption {
 	}
 }
 
+// Combines a rune and a relative weight. This is used
+// with the FillWeighted option to the Construct function.
 type RuneWeight struct {
 	Rune   rune
 	Weight int64

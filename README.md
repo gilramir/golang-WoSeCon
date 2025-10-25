@@ -133,3 +133,19 @@ The options are:
     need to sum up to some specific value. The code will sum the
     weights and use their percentages to decide the probability that
     a rune will be chosen to fill in an empty cell in the puzzle.
+    Example:
+
+```
+    runeWeights := make([]wosecon.RuneWeight, 3)
+    runeWeights[0] = wosecon.RuneWeight{"E", 20}
+    runeWeights[2] = wosecon.RuneWeight{"S", 18}
+    runeWeights[3] = wosecon.RuneWeight{"T", 15}
+
+	wordSearch, err := wosecon.Construct(10, 10, wordSlice,
+		wosecon.FillWeighted(runeWeights))
+```
+
+## Errors
+
+The Constructor function wil return only a handful of specific errors, provided
+a constants starting with the name "Err". See the documentation.
