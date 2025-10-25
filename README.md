@@ -138,8 +138,8 @@ The options are:
 ```
     runeWeights := make([]wosecon.RuneWeight, 3)
     runeWeights[0] = wosecon.RuneWeight{"E", 20}
-    runeWeights[2] = wosecon.RuneWeight{"S", 18}
-    runeWeights[3] = wosecon.RuneWeight{"T", 15}
+    runeWeights[1] = wosecon.RuneWeight{"S", 18}
+    runeWeights[2] = wosecon.RuneWeight{"T", 15}
 
 	wordSearch, err := wosecon.Construct(10, 10, wordSlice,
 		wosecon.FillWeighted(runeWeights))
