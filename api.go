@@ -5,14 +5,15 @@
 
 package wosecon
 
-// Define a new type that implements the error interface
+// The error type that Construct() returns. It's just a string.
 type ErrorString string
 
 func (e ErrorString) Error() string {
 	return string(e)
 }
 
-// The errors that Construct() can return
+// The errors that Construct() can return. These are the only errors that
+// Construct() returns.
 const (
 	ErrCannotFitWords          ErrorString = "the words cannot be placed into this size of grid"
 	ErrSmallerThanMinimumSize  ErrorString = "the grid must be at least 4x4"
@@ -20,7 +21,8 @@ const (
 	ErrFillerWeightNotPositive ErrorString = "at least one filler rune's weight is <=0"
 )
 
-// Construct a WordSearch
+// Construct a WordSearch. The minum size is 4x4, as anything less doesn't make
+// sense as a puzzle.
 func Construct(numCols int, numRows int, words []string, opts ...WordSearchOption) (*WordSearch, error) {
 	var constructor wordSearchConstructor
 

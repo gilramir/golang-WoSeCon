@@ -10,15 +10,17 @@ import (
 	"slices"
 )
 
-// The constructed word search puzzle
+// The constructed word search puzzle, with the solution too.
 type WordSearch struct {
+	// The number of columns in the puzzle
 	NumCols int
+	// The number of rows in the puzzle
 	NumRows int
 
 	// The solution, as words and placments (location+direction)
 	WordPlacements map[string]WordPlacement
 
-	// The solution, as runes
+	// The solution, as runes. Empty runes are ASCII SPACE runes (" ").
 	// First dimension is y (rows)
 	// Second dimension is x (column)
 	SolutionRows [][]rune
@@ -31,12 +33,16 @@ type WordSearch struct {
 	PuzzleRows [][]rune
 }
 
+// Indicate the placemtn of a word in the puzzle
+// by the (column, row) coordinate of its first rune,
+// and the direction in which the word goes.
 type WordPlacement struct {
 	Col       int
 	Row       int
 	Direction Direction
 }
 
+// The string representation of the Direction in the WordPlacement
 func (s WordPlacement) DirectionString() string {
 	return DirectionString(s.Direction)
 }

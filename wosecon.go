@@ -66,7 +66,7 @@ func (s directedLocation) equals(target directedLocation) bool {
 func nilDirectedLocation() directedLocation {
 	return directedLocation{-1, -1, 0}
 }
-func IsNilDirectedLocation(d directedLocation) bool {
+func isNilDirectedLocation(d directedLocation) bool {
 	return d.col == -1 || d.row == -1
 }
 

@@ -10,9 +10,12 @@ import (
 	"strings"
 )
 
+// Any of the 8 possible directions is representing by a Direction.
+// In some uses, a Direction represents a single direction. In other
+// cases, it represents multiple directiosn, because it is a uint8 and
+// each bit represents a direction.
 type Direction uint8
 
-// Public
 const (
 	// Natural directions for LTR languages
 	Down          Direction = 1
@@ -26,21 +29,28 @@ const (
 	RTLDescending Direction = 64
 	RTLAscending  Direction = 128
 
-	NaturalLTRDirections   = Down | LTRHorizontal | LTRDescending | LTRAscending
+	// The "natural" directions for a wordsearc puzzle for left-to-right
+	// languages. This includes all three left-to-right directions, and
+	// "down"
+	NaturalLTRDirections = Down | LTRHorizontal | LTRDescending | LTRAscending
+
+	// The opposite of NaturalLTRDirections. It has all three right-to-left
+	// diretions, and "up"
 	UnnaturalLTRDirections = Up | RTLHorizontal | RTLDescending | RTLAscending
 
+	// All 8 directions.
 	AllDirections = NaturalLTRDirections | UnnaturalLTRDirections
 
-	// Any downard direction
+	// Any downward direction, including diagonal
 	GoesDownward = LTRDescending | RTLDescending | Down
 
-	// Any upward direction
+	// Any upward direction, including diagonal
 	GoesUpward = LTRAscending | RTLAscending | Up
 
-	// Any left-to-right direction
+	// Any left-to-right direction, including diaagonal
 	GoesLTR = LTRDescending | LTRAscending | LTRHorizontal
 
-	// Any right-to-left direction
+	// Any right-to-left direction, including diagonal
 	GoesRTL = RTLDescending | RTLAscending | RTLHorizontal
 )
 
@@ -67,6 +77,7 @@ func getIndividualDirections(d Direction) []Direction {
 	return directions
 }
 
+// Gives a string representation of a Direction.
 func DirectionString(d Direction) string {
 	directionsSlice := getIndividualDirections(d)
 	labelsSlice := make([]string, len(directionsSlice))

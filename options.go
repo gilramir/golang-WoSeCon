@@ -7,6 +7,8 @@ package wosecon
 
 import "sort"
 
+// This type used by options which can be given to Construct()
+// Construct accepts zero or more options.
 type WordSearchOption func(*wordSearchConstructor) error
 
 // Add all left-to-right directions (and "down")
