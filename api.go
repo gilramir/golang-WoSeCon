@@ -22,7 +22,7 @@ const (
 )
 
 // Construct a WordSearch. The minum size is 4x4, as anything less doesn't make
-// sense as a puzzle.
+// sense as a puzzle. Duplicate words are removed.
 func Construct(numCols int, numRows int, words []string, opts ...WordSearchOption) (*WordSearch, error) {
 	var constructor wordSearchConstructor
 

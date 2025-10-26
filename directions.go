@@ -17,6 +17,11 @@ import (
 type Direction uint8
 
 const (
+	// No direction. This is used to represent "not yet initialized",
+	// and also the fact that single-rune words need no notion of
+	// direction.
+	NilDirection Direction = 0
+
 	// Natural directions for LTR languages
 	Down          Direction = 1
 	LTRHorizontal Direction = 2
@@ -29,7 +34,7 @@ const (
 	RTLDescending Direction = 64
 	RTLAscending  Direction = 128
 
-	// The "natural" directions for a wordsearc puzzle for left-to-right
+	// The "natural" directions for a wordsearch puzzle for left-to-right
 	// languages. This includes all three left-to-right directions, and
 	// "down"
 	NaturalLTRDirections = Down | LTRHorizontal | LTRDescending | LTRAscending
@@ -54,8 +59,9 @@ const (
 	GoesRTL = RTLDescending | RTLAscending | RTLHorizontal
 )
 
-// Return a slice of the directiosn set in this Direction object
-func getIndividualDirections(d Direction) []Direction {
+// Return a slice of the directions set in this Direction object.
+// It never includes NilDirection
+func DirectionSlice(d Direction) []Direction {
 	directions := make([]Direction, 0, 8)
 
 	checkAndSet := func(od Direction) {
@@ -78,8 +84,9 @@ func getIndividualDirections(d Direction) []Direction {
 }
 
 // Gives a string representation of a Direction.
+// It never includes "NilDirection"
 func DirectionString(d Direction) string {
-	directionsSlice := getIndividualDirections(d)
+	directionsSlice := DirectionSlice(d)
 	labelsSlice := make([]string, len(directionsSlice))
 
 	for i, idir := range directionsSlice {

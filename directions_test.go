@@ -13,7 +13,7 @@ import (
 func (s *MySuite) TestDirectionsNaturalLTR(c *C) {
 	var d Direction = NaturalLTRDirections
 
-	directions := getIndividualDirections(d)
+	directions := DirectionSlice(d)
 	c.Assert(len(directions), Equals, 4)
 
 	// Has these
@@ -32,7 +32,7 @@ func (s *MySuite) TestDirectionsNaturalLTR(c *C) {
 func (s *MySuite) TestDirectionsAll(c *C) {
 	var d Direction = AllDirections
 
-	directions := getIndividualDirections(d)
+	directions := DirectionSlice(d)
 	c.Assert(len(directions), Equals, 8)
 
 	// Has these

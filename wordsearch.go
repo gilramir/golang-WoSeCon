@@ -6,7 +6,6 @@
 package wosecon
 
 import (
-	"math/rand"
 	"slices"
 )
 
@@ -17,23 +16,43 @@ type WordSearch struct {
 	// The number of rows in the puzzle
 	NumRows int
 
-	// The solution, as words and placments (location+direction)
+	// The "official" solution, as words and placements (location+direction)
+	// This solution was create by the algorithm
 	WordPlacements map[string]WordPlacement
 
-	// The solution, as runes. Empty runes are ASCII SPACE runes (" ").
+	// All possible solutions. After filler is added, multiple
+	// solutions might appear for a single word. If a single word
+	// is a sub-string of a larger word, the solution is counted
+	// for the larger word, not the shorter word.
+	// If there are multiple solutions for the same word, starting
+	// at the same placement (going in different directions), there
+	// will be mulitple WordPlacements for that word. In other words,
+	// the Direction in any single WordPlacement indicates just a single
+	// direction.
+	AllPossibleWordPlacements map[string][]WordPlacement
+
+	// How many words have more than one solution
+	NumWordsWithMultipleSolutions int
+
+	// The "official" solution, as runes.
+	// This solution was create by the algorithm and does not
+	// take into account other possible solutions after the filler
+	// was added.
+	// Places where filler would be in the grid are indicated by
+	// ASCII SPACE runes (" ").
 	// First dimension is y (rows)
 	// Second dimension is x (column)
 	SolutionRows [][]rune
 
 	// The puzzle, as runes
-	// Every cell is filled. It has the solution
-	// an the filler, together.
+	// Every cell is filled. It has the algorithm's "official" solution
+	// and the filler, combined.
 	// First dimension is y (rows)
 	// Second dimension is x (column)
 	PuzzleRows [][]rune
 }
 
-// Indicate the placemtn of a word in the puzzle
+// Indicate the placement of a word in the puzzle
 // by the (column, row) coordinate of its first rune,
 // and the direction in which the word goes.
 type WordPlacement struct {
@@ -52,14 +71,14 @@ func (s WordPlacement) DirectionString() string {
 func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 
 	ws := &WordSearch{
-		NumCols:        s.numCols,
-		NumRows:        s.numRows,
-		WordPlacements: make(map[string]WordPlacement),
-		// Allocate the rows
-		SolutionRows: make([][]rune, s.numRows),
-		PuzzleRows:   make([][]rune, s.numRows),
+		NumCols:                   s.numCols,
+		NumRows:                   s.numRows,
+		WordPlacements:            make(map[string]WordPlacement),
+		AllPossibleWordPlacements: make(map[string][]WordPlacement),
+		SolutionRows:              make([][]rune, s.numRows),
+		PuzzleRows:                make([][]rune, s.numRows),
 	}
-	// Allocate the columns, filled with SPACE characteers
+	// Allocate the columns, filled with SPACE characters
 	for row := 0; row < s.numRows; row++ {
 		ws.SolutionRows[row] = slices.Repeat([]rune{' '}, s.numCols)
 		ws.PuzzleRows[row] = slices.Repeat([]rune{' '}, s.numCols)
@@ -68,10 +87,15 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 	// Fill in the solution and puzzle
 	for _, wordInfo := range s.wordInfos {
 		dl := wordInfo.placement
+		direction := dl.direction
+		// If the word is only 1-rune long, it's directionless
+		if wordInfo.runeLen == 1 {
+			direction = NilDirection
+		}
 		ws.WordPlacements[wordInfo.text] = WordPlacement{
 			Col:       dl.col,
 			Row:       dl.row,
-			Direction: dl.direction,
+			Direction: direction,
 		}
 
 		var colAdj int
@@ -89,7 +113,7 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 			colAdj = 1
 		} else if dl.direction&GoesRTL != 0 {
 			colAdj = -1
-		} // else vetical
+		} // else vertical
 
 		var col = dl.col
 		var row = dl.row
@@ -109,6 +133,17 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 		s.applyUniformFiller(ws)
 	}
 
+	// The filler may have created more solutions.
+	// Find them all
+	ws.findAllPossibleSolutions(s.possibleDirections)
+
+	// Count the words with multiple worde placements
+	for _, wordPlacements := range ws.AllPossibleWordPlacements {
+		if len(wordPlacements) > 1 {
+			ws.NumWordsWithMultipleSolutions += 1
+		}
+	}
+
 	return ws
 }
 
@@ -117,7 +152,7 @@ func (s *wordSearchConstructor) applyUniformFiller(ws *WordSearch) {
 		for row := 0; row < ws.NumRows; row++ {
 			if s.isCellAvailable(col, row) {
 				// Pick a random number, thus picking a rune
-				n := rand.Intn(len(s.fillerRunes))
+				n := s.rng.Intn(len(s.fillerRunes))
 				ws.PuzzleRows[row][col] = s.fillerRunes[n]
 			}
 		}
@@ -129,7 +164,7 @@ func (s *wordSearchConstructor) applyWeightedFiller(ws *WordSearch) {
 		for row := 0; row < ws.NumRows; row++ {
 			if s.isCellAvailable(col, row) {
 				// Pick a random number
-				rn := rand.Int63n(s.fillerWeightsSum)
+				rn := s.rng.Int63n(s.fillerWeightsSum)
 				// Find where it would fit in the slice of
 				// weights
 				n, _ := slices.BinarySearch(s.fillerWeights, rn)

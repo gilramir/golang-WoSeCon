@@ -60,7 +60,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 
 	// The cells inside (non-border) of the grid can go in all directions
 	// Initialize those first
-	possibleDirectionsSlice := getIndividualDirections(possibleDirections)
+	possibleDirectionsSlice := DirectionSlice(possibleDirections)
 
 	// We over-allocate capacity a bit, as the corners and edges don't need as many
 	// directions, but that's ok
@@ -87,14 +87,14 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 
 	// Top row; cannot ascend or go up
 	topRowDirections := possibleDirections & goingUpMask
-	topRowDirectionsSlice := getIndividualDirections(topRowDirections)
+	topRowDirectionsSlice := DirectionSlice(topRowDirections)
 	for col := 0; col < numCols; col++ {
 		var directionsSlice []Direction
 		// Corners have more restrictions
 		if col == 0 {
-			directionsSlice = getIndividualDirections(topRowDirections & goingLeftMask)
+			directionsSlice = DirectionSlice(topRowDirections & goingLeftMask)
 		} else if col == numCols-1 {
-			directionsSlice = getIndividualDirections(topRowDirections & goingRightMask)
+			directionsSlice = DirectionSlice(topRowDirections & goingRightMask)
 		} else {
 			directionsSlice = topRowDirectionsSlice
 		}
@@ -111,14 +111,14 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 
 	// Bottomm row; cannot descend or go down
 	bottomRowDirections := possibleDirections & goingDownMask
-	bottomRowDirectionsSlice := getIndividualDirections(bottomRowDirections)
+	bottomRowDirectionsSlice := DirectionSlice(bottomRowDirections)
 	for col := 0; col < numCols; col++ {
 		var directionsSlice []Direction
 		// Corners have more restrictions
 		if col == 0 {
-			directionsSlice = getIndividualDirections(bottomRowDirections & goingLeftMask)
+			directionsSlice = DirectionSlice(bottomRowDirections & goingLeftMask)
 		} else if col == numCols-1 {
-			directionsSlice = getIndividualDirections(bottomRowDirections & goingRightMask)
+			directionsSlice = DirectionSlice(bottomRowDirections & goingRightMask)
 		} else {
 			directionsSlice = bottomRowDirectionsSlice
 		}
@@ -135,7 +135,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 
 	// Left column; cannot go left. We already did the top and bottom
 	// corners, so we can skip them
-	leftColDirectionsSlice := getIndividualDirections(possibleDirections & goingLeftMask)
+	leftColDirectionsSlice := DirectionSlice(possibleDirections & goingLeftMask)
 	for row := 1; row < numRows-1; row++ {
 		for _, direction := range leftColDirectionsSlice {
 			d := directedLocation{
@@ -150,7 +150,7 @@ func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Dire
 
 	// Right column; cannot go right. We already did the top and bottom
 	// corners, so we can skip them
-	rightColDirectionsSlice := getIndividualDirections(possibleDirections & goingRightMask)
+	rightColDirectionsSlice := DirectionSlice(possibleDirections & goingRightMask)
 	for row := 1; row < numRows-1; row++ {
 		for _, direction := range rightColDirectionsSlice {
 			d := directedLocation{

@@ -58,6 +58,7 @@ type directedLocation struct {
 	direction Direction
 }
 
+// XXX don't need this; Go's == will work.
 func (s directedLocation) equals(target directedLocation) bool {
 	return s.col == target.col && s.row == target.row && s.direction == target.direction
 }
@@ -101,11 +102,16 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, o
 	s.cellMatrix = newCellMatrix(numCols, numRows)
 
 	// Use the list of words (strings) from the user
-	// to create our wordInfo objects
-	s.wordInfos = make([]*wordInfo, len(words))
+	// to create our wordInfo objects, but unique-ify the word lsit
+	s.wordInfos = make([]*wordInfo, 0, len(words))
 
-	for i, wordString := range words {
-		s.wordInfos[i] = newWordInfo(wordString)
+	seen := make(map[string]bool)
+	for _, wordString := range words {
+		if seen[wordString] {
+			continue
+		}
+		s.wordInfos = append(s.wordInfos, newWordInfo(wordString))
+		seen[wordString] = true
 	}
 
 	// Apply the options
@@ -144,7 +150,8 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, o
 	}
 
 	// Stable sort words, longest to shortest
-	// If the same length, then in alphbetical order
+	// If the same length, then in alphabetical order
+	// It should be easiest to fit the longest words first.
 	sort.Slice(s.wordInfos, func(i, j int) bool {
 		wi := s.wordInfos[i]
 		wj := s.wordInfos[j]
