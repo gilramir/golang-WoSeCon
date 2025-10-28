@@ -203,6 +203,6 @@ func (s *MySuite) TestSolutions04(c *C) {
 	banana_wps := ws.AllPossibleWordPlacements[yesul_banana]
 	c.Assert(len(banana_wps), Equals, 1)
 
-	mart_wps := ws.AllPossibleWordPlacements[yesul_banana]
+	mart_wps := ws.AllPossibleWordPlacements[yesul_mart]
 	c.Assert(len(mart_wps), Equals, 2)
 }
