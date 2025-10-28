@@ -176,3 +176,33 @@ func (s *MySuite) TestSolutions03(c *C) {
 
 	c.Check(ws.NumWordsWithMultipleSolutions, Equals, 2)
 }
+
+// This is the bug that Yesul saw
+// vim keeps messing up the korean, so this one fiel will be in a different
+// editor
+func (s *MySuite) TestSolutions04(c *C) {
+
+	ws := WordSearch{
+		NumCols: 8,
+		NumRows: 8,
+		// This is in solutions2_test.go; don't edit that with
+		// vim; the vim-go plugin will destroy it.
+		SolutionRows:              yesul_solution,
+		PuzzleRows:                yesul_puzzle,
+		WordPlacements:            yesul_word_placements,
+		AllPossibleWordPlacements: make(map[string][]WordPlacement),
+	}
+
+	// The "official" solution, as words and placements (location+direction)
+	// This solution was create by the algorithm
+	//	WordPlacements map[string]WordPlacement
+
+	ws.findAllPossibleSolutions(NaturalLTRDirections)
+	c.Check(len(ws.WordPlacements), Equals, 11)
+
+	banana_wps := ws.AllPossibleWordPlacements[yesul_banana]
+	c.Assert(len(banana_wps), Equals, 1)
+
+	mart_wps := ws.AllPossibleWordPlacements[yesul_banana]
+	c.Assert(len(mart_wps), Equals, 2)
+}
