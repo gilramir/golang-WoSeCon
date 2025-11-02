@@ -8,7 +8,6 @@ package wosecon
 import (
 	"math/rand"
 	"sort"
-	"unicode/utf8"
 )
 
 // The algorithm works in 2 modoes, forward or backward
@@ -20,16 +19,18 @@ const (
 )
 
 type wordInfo struct {
-	text            string
-	runeLen         int
+	DecomposedString
+	//	text            string
+	//	runeLen         int
 	placement       directedLocation
 	testedLocations []directedLocation
 }
 
-func newWordInfo(text string) *wordInfo {
+func newWordInfo(dcstring DecomposedString) *wordInfo {
 	return &wordInfo{
-		text:            text,
-		runeLen:         utf8.RuneCountInString(text),
+		DecomposedString: dcstring,
+		//		text:            text,
+		//		runeLen:         utf8.RuneCountInString(text),
 		placement:       nilDirectedLocation(),
 		testedLocations: make([]directedLocation, 0),
 	}
@@ -50,6 +51,10 @@ func (s *wordInfo) moveLocationToTested() {
 
 func (s *wordInfo) deleteTested() {
 	s.testedLocations = nil
+}
+
+func (s *wordInfo) runeLen() {
+	return len(s.Parts)
 }
 
 type directedLocation struct {
@@ -86,16 +91,16 @@ type wordSearchConstructor struct {
 	rng             *rand.Rand
 
 	// Used for uniformly filling in the puzzle, and
-	// also as one of the data sturctures for filling in
+	// also as one of the data structures for filling in
 	// by weights
-	fillerRunes []rune
+	fillerRunes []string
 
 	// Used for filling in the puzzle by weights
 	fillerWeights    []int64
 	fillerWeightsSum int64
 }
 
-func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, opts ...WordSearchOption) error {
+func (s *wordSearchConstructor) init(numCols int, numRows int, dcstrings []DecomposedStrings, opts ...WordSearchOption) error {
 
 	s.numCols = numCols
 	s.numRows = numRows
@@ -106,12 +111,12 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, o
 	s.wordInfos = make([]*wordInfo, 0, len(words))
 
 	seen := make(map[string]bool)
-	for _, wordString := range words {
-		if seen[wordString] {
+	for _, dcstring := range dcstrings {
+		if seen[dcstring.Complete] {
 			continue
 		}
-		s.wordInfos = append(s.wordInfos, newWordInfo(wordString))
-		seen[wordString] = true
+		s.wordInfos = append(s.wordInfos, newWordInfo(dcstring))
+		seen[dcstring.Complete] = true
 	}
 
 	// Apply the options
@@ -155,11 +160,11 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, words []string, o
 	sort.Slice(s.wordInfos, func(i, j int) bool {
 		wi := s.wordInfos[i]
 		wj := s.wordInfos[j]
-		if wi.runeLen == wj.runeLen {
-			return wi.text < wj.text
+		if wi.runeLen() == wj.runeLen() {
+			return wi.Complete < wj.Complete
 		} else {
 			// Descending order
-			return wj.runeLen < wi.runeLen
+			return wj.runeLen() < wi.runeLen()
 		}
 	})
 	return nil
@@ -253,21 +258,21 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 
 	// Find endRow
 	if location.direction&GoesDownward > 0 {
-		endRow = startRow + wordInfo.runeLen
+		endRow = startRow + wordInfo.runeLen()
 		rowAdj = 1
 	} else if location.direction&GoesUpward > 0 {
-		endRow = startRow - wordInfo.runeLen
+		endRow = startRow - wordInfo.runeLen()
 		rowAdj = -1
 	} // else horizontal
 
 	// Find endCol
 	if location.direction&GoesLTR != 0 {
-		endCol = startCol + wordInfo.runeLen
+		endCol = startCol + wordInfo.runeLen()
 		colAdj = 1
 	} else if location.direction&GoesRTL != 0 {
-		endCol = startCol - wordInfo.runeLen
+		endCol = startCol - wordInfo.runeLen()
 		colAdj = -1
-	} // else vetical
+	} // else vertical
 
 	// Does it fit?
 	if endCol < 0 || endCol > s.numCols || endRow < 0 || endRow > s.numRows {
@@ -281,7 +286,7 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Check if each coordinate is unused
 	col := startCol
 	row := startRow
-	for i := 0; i < wordInfo.runeLen; i++ {
+	for i := 0; i < wordInfo.runeLen(); i++ {
 		if !s.isCellAvailable(col, row) {
 			// log.Printf("validPlacement %s overlap at col=%d row=%d", wordInfo.text, col, row)
 			return false
@@ -296,7 +301,7 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Mark the cells as used
 	col = startCol
 	row = startRow
-	for i := 0; i < wordInfo.runeLen; i++ {
+	for i := 0; i < wordInfo.runeLen(); i++ {
 		s.setCellUsed(col, row)
 		col += colAdj
 		row += rowAdj

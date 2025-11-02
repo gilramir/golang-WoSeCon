@@ -42,14 +42,14 @@ type WordSearch struct {
 	// ASCII SPACE runes (" ").
 	// First dimension is y (rows)
 	// Second dimension is x (column)
-	SolutionRows [][]rune
+	SolutionRows [][]string
 
 	// The puzzle, as runes
 	// Every cell is filled. It has the algorithm's "official" solution
 	// and the filler, combined.
 	// First dimension is y (rows)
 	// Second dimension is x (column)
-	PuzzleRows [][]rune
+	PuzzleRows [][]string
 }
 
 // Indicate the placement of a word in the puzzle
@@ -75,13 +75,13 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 		NumRows:                   s.numRows,
 		WordPlacements:            make(map[string]WordPlacement),
 		AllPossibleWordPlacements: make(map[string][]WordPlacement),
-		SolutionRows:              make([][]rune, s.numRows),
-		PuzzleRows:                make([][]rune, s.numRows),
+		SolutionRows:              make([][]string, s.numRows),
+		PuzzleRows:                make([][]string, s.numRows),
 	}
-	// Allocate the columns, filled with SPACE characters
+	// Allocate the columns, filled with empty strings
 	for row := 0; row < s.numRows; row++ {
-		ws.SolutionRows[row] = slices.Repeat([]rune{' '}, s.numCols)
-		ws.PuzzleRows[row] = slices.Repeat([]rune{' '}, s.numCols)
+		ws.SolutionRows[row] = slices.Repeat([]string{""}, s.numCols)
+		ws.PuzzleRows[row] = slices.Repeat([]string{""}, s.numCols)
 	}
 
 	// Fill in the solution and puzzle

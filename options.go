@@ -27,7 +27,8 @@ func AddUnnaturalLTRDirections() WordSearchOption {
 	}
 }
 
-// Add a single direction
+// Add a direction. The direction argument may be one direction, or it
+// may represent multiple directions.
 func AddDirection(direction Direction) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.possibleDirections |= direction
