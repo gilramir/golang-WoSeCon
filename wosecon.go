@@ -6,6 +6,7 @@
 package wosecon
 
 import (
+	"log"
 	"math/rand"
 	"sort"
 	"unicode/utf8"
@@ -175,6 +176,7 @@ func (s *wordSearchConstructor) construct() error {
 	currentWord := s.wordInfos[currentWordIndex]
 	for {
 		if s.locateOne(currentWord) {
+			//			s.cellMatrix.show(s.numCols)
 			if currentWordIndex == len(s.wordInfos)-1 {
 				// Finished
 				break
@@ -190,7 +192,9 @@ func (s *wordSearchConstructor) construct() error {
 				currentWord.deleteTested()
 				currentWordIndex--
 				currentWord = s.wordInfos[currentWordIndex]
+				s.clearPlacement(currentWord)
 				s.mode = backwardMode
+				//				s.cellMatrix.show(s.numCols)
 			}
 		}
 	}
@@ -223,6 +227,7 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 			return true
 		}
 	}
+	//	log.Printf("could not locateOne %s mode=%s", currentWord.text, string(s.mode))
 	return false
 }
 
@@ -238,6 +243,7 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Perchance did we already test this location?
 	for _, testedLocation := range wordInfo.testedLocations {
 		if testedLocation.equals(location) {
+			log.Printf("Tested already")
 			return false
 		}
 	}
@@ -267,7 +273,7 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	} else if location.direction&GoesRTL != 0 {
 		endCol = startCol - wordInfo.runeLen
 		colAdj = -1
-	} // else vetical
+	} // else vertical
 
 	// Does it fit?
 	if endCol < 0 || endCol > s.numCols || endRow < 0 || endRow > s.numRows {
@@ -302,8 +308,38 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 		row += rowAdj
 	}
 
-	//log.Printf("validPlacement %s chosen, col=%d row=%d", wordInfo.text, startCol, startRow)
+	//	log.Printf("validPlacement %s chosen, col=%d row=%d", wordInfo.text, startCol, startRow)
 	return true
+}
+
+func (s *wordSearchConstructor) clearPlacement(wordInfo *wordInfo) {
+	location := wordInfo.placement
+	var colAdj int
+	var rowAdj int
+
+	// Find endRow
+	if location.direction&GoesDownward > 0 {
+		rowAdj = 1
+	} else if location.direction&GoesUpward > 0 {
+		rowAdj = -1
+	} // else horizontal
+
+	// Find endCol
+	if location.direction&GoesLTR != 0 {
+		colAdj = 1
+	} else if location.direction&GoesRTL != 0 {
+		colAdj = -1
+	} // else vertical
+
+	// Mark the cells as avaialble
+	col := location.col
+	row := location.row
+	//	log.Printf("clearPlacement %s at col=%d row=%d", wordInfo.text, col, row)
+	for i := 0; i < wordInfo.runeLen; i++ {
+		s.setCellAvailable(col, row)
+		col += colAdj
+		row += rowAdj
+	}
 }
 
 func (s *wordSearchConstructor) isCellAvailable(col, row int) bool {
@@ -312,4 +348,8 @@ func (s *wordSearchConstructor) isCellAvailable(col, row int) bool {
 
 func (s *wordSearchConstructor) setCellUsed(col, row int) {
 	s.cellMatrix.setUsed(col, row, s.numCols)
+}
+
+func (s *wordSearchConstructor) setCellAvailable(col, row int) {
+	s.cellMatrix.setAvailable(col, row, s.numCols)
 }

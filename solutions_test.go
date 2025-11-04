@@ -206,3 +206,17 @@ func (s *MySuite) TestSolutions04(c *C) {
 	mart_wps := ws.AllPossibleWordPlacements[yesul_mart]
 	c.Assert(len(mart_wps), Equals, 2)
 }
+
+// Apparently we don't search the entire problem space.
+// Found when doing a Gangnam Style puzzle at 4x6
+func (s *MySuite) TestSolutions05(c *C) {
+
+	// It fails at many randomizer seeds; 8 is one of them
+
+	filler := "x"
+	_, apiError := Construct(4, 6, gangnam_style_vocab,
+		FillUniformlyFromString(filler),
+		AddNaturalLTRDirections(),
+		RandomSeed(8))
+	c.Assert(apiError, IsNil)
+}
