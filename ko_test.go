@@ -47,3 +47,14 @@ var yesul_christmas =   "크리스마스"
 var yesul_tv =          "텔레비전"
 var yesul_water =       "물"
 var yesul_coffee =      "커피"
+
+var gangnam_style_vocab []string = []string{
+    "오빤",
+    "강남",
+    "스타일",
+    "사랑",
+    "낮에는",
+    "따사로운",
+    "인간적인",
+    "여자",
+}
