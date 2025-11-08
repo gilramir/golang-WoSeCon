@@ -7,17 +7,20 @@ written by Lefteris Moussiades.
 In this implementation, however, words can be placed in all 8 directions,
 at the choice of the user.
 
-The API has been developed to support runes, as opposed to bytes, to any
-unicode codepoint can be used in any cell of the grid,
-even if the codepoint encodes into multiple bytes as UTF-8.
+v1 of this API used runes (Unicode code poitns) as the type
+for cells in the puzzle grid.
 
-The API supports filling in the puzzle with random runes.
+v2 now uses strings, to support puzzles that need more than one rune
+in a cell.
+
+The API supports filling in the non-solution part of the
+puzzle with random values, from a list of possible values that you provide.
 
 See the
-[GoDoc documentation](https://pkg.go.dev/github.com/gilramir/golang-WoSeCon)
+[GoDoc documentation](https://pkg.go.dev/github.com/gilramir/golang-WoSeCon/v2)
 for this module.
 
-The algorithm is exhaustive. As it attempts to place words randomly,
+The algorithm performs an exhaustive search. As it attempts to place words randomly,
 if it cannot place a word on the first try, it will backtrack, removing
 words and replacing them, until the entire solution space has been exhausted.
 Under normal conditions, this does not take a long time.
@@ -50,12 +53,12 @@ wordSearch, err := wosecon.Construct(numColumns, numRows, words,
 
 The WordSearch object gives you the placement of each word. A placement
 is the starting colum and row, and direction of the word. It also gives
-you a matrix of runes for the solution (the puzzle with no filler), and
+you a matrix of strings for the solution (the puzzle with no filler), and
 the complete puzzle (solution + filler)
 
 If you print the Solution, it would look something like this. However,
-empty cells in the grid are given as empty string, so you must take those
-into account.
+empty cells in the grid are given as empty string, so you must take that
+into account when printing.
 ```
     0  1  2  3  4  5  6  7
 
@@ -115,6 +118,12 @@ The options are:
     * RTLHorizontal
     * RTLAscending
     * RTLDescending
+    As the directions are bit values, you can bitwise-OR more than
+    one direction, as in:
+
+```
+    wosecon.AddDirection(wosecon.Down|wosecon.Up)
+```
 
 * **UseAllDirections()** - the solution can use all 8 of the possible
     directions.
@@ -153,4 +162,4 @@ The options are:
 ## Errors
 
 The Constructor function wil return only a handful of specific errors, provided
-a constants starting with the name "Err". See the documentation.
+a constants starting with the name "Err". See the documentation for the values.
