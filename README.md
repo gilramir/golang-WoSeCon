@@ -36,7 +36,7 @@ Construct a WordSearch with one simple function call:
 
 ```
 import (
-    wosecon "github.com/gilramir/golang-WoSeCon"
+    wosecon "github.com/gilramir/golang-WoSeCon/v2"
 )
 
 numColumns := 8
@@ -53,7 +53,9 @@ is the starting colum and row, and direction of the word. It also gives
 you a matrix of runes for the solution (the puzzle with no filler), and
 the complete puzzle (solution + filler)
 
-If you print the Solution, it would look something like this:
+If you print the Solution, it would look something like this. However,
+empty cells in the grid are given as empty string, so you must take those
+into account.
 ```
     0  1  2  3  4  5  6  7
 
@@ -124,10 +126,13 @@ The options are:
 * **FillUniformlyFromString(filler string)** - fill in the puzzle
     with equally-random choices of runes from this string.
 
+* **FillUniformlyFromStringSlice(filler []string)** - fill in the puzzble
+    with equally-random choices of strings from this slice.
+
 * **FillUniformlyFromRuneSlice(filler []rune)** - fill in the puzzble
     with equally-random choices of runes from this slice.
 
-* **FillWeighted(filler []RuneWeight)** - fill in the puzzble
+* **FillWeighted(filler []FillerWeight)** - fill in the puzzble
     based on weighted values. Give a slice of RuneWeight objects,
     which are just a rune and its relative weight. The weights do not
     need to sum up to some specific value. The code will sum the
@@ -136,13 +141,13 @@ The options are:
     Example:
 
 ```
-    runeWeights := make([]wosecon.RuneWeight, 3)
-    runeWeights[0] = wosecon.RuneWeight{"E", 20}
-    runeWeights[1] = wosecon.RuneWeight{"S", 18}
-    runeWeights[2] = wosecon.RuneWeight{"T", 15}
+    fillerWeights := make([]wosecon.FillerWeight, 3)
+    fillerWeights[0] = wosecon.FillerWeight{"E", 20}
+    fillerWeights[1] = wosecon.FillerWeight{"S", 18}
+    fillerWeights[2] = wosecon.FillerWeight{"T", 15}
 
 	wordSearch, err := wosecon.Construct(10, 10, wordSlice,
-		wosecon.FillWeighted(runeWeights))
+		wosecon.FillWeighted(fillerWeights))
 ```
 
 ## Errors
