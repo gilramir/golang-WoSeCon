@@ -177,6 +177,35 @@ func (s *MySuite) TestSolutions03(c *C) {
 	c.Check(ws.NumWordsWithMultipleSolutions, Equals, 2)
 }
 
+func runes2strings(runes []rune) []string {
+	answer := make([]string, len(runes))
+	for i, r := range runes {
+		answer[i] = string(r)
+	}
+	return answer
+}
+
+func rmatrix2smatrix(rmatrix [][]rune) [][]string {
+	smatrix := make([][]string, len(rmatrix))
+	for row, rcolumns := range rmatrix {
+		scolumns := make([]string, len(rcolumns))
+		smatrix[row] = scolumns
+		for col, r := range rcolumns {
+			scolumns[col] = string(r)
+		}
+	}
+	return smatrix
+}
+
+func skeys2Sequences[V any](smap map[string]V) map[string]Sequence {
+	sequences := make(map[string]Sequence)
+
+	for k, _ := range smap {
+		sequences[k] = NewRuneSequence(k)
+	}
+	return sequences
+}
+
 // This is the bug that Yesul saw
 // vim keeps messing up the korean, so this one fiel will be in a different
 // editor
@@ -187,8 +216,9 @@ func (s *MySuite) TestSolutions04(c *C) {
 		NumRows: 8,
 		// This is in solutions2_test.go; don't edit that with
 		// vim; the vim-go plugin will destroy it.
-		SolutionRows:              yesul_solution,
-		PuzzleRows:                yesul_puzzle,
+		Sequences:                 skeys2Sequences(yesul_word_placements),
+		SolutionRows:              rmatrix2smatrix(yesul_solution),
+		PuzzleRows:                rmatrix2smatrix(yesul_puzzle),
 		WordPlacements:            yesul_word_placements,
 		AllPossibleWordPlacements: make(map[string][]WordPlacement),
 	}

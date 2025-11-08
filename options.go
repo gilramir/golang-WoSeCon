@@ -44,17 +44,6 @@ func UseAllDirections() WordSearchOption {
 	}
 }
 
-/*
-// Never produce a WordSearch that has these words
-// in *any* direction
-func PreventBadWords(badWords []string) WordSearchOption {
-	return func(constructor *wordSearchConstructor) error {
-		constructor.badWords = badWords
-		return nil
-	}
-}
-*/
-
 // Initialize the Constructor with this random seed
 func RandomSeed(seed int64) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
@@ -68,7 +57,13 @@ func RandomSeed(seed int64) WordSearchOption {
 // an equal chance of being used
 func FillUniformlyFromString(filler string) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
-		constructor.fillerRunes = []rune(filler)
+		// Convert the string into a slice of strings, one for each rune
+		fillerStrings := make([]string, 0, len(filler))
+		// Iterate rune by rune
+		for _, r := range filler {
+			fillerStrings = append(fillerStrings, string(r))
+		}
+		constructor.fillerStrings = fillerStrings
 		return nil
 	}
 }
@@ -77,52 +72,55 @@ func FillUniformlyFromString(filler string) WordSearchOption {
 // an equal chance of being used
 func FillUniformlyFromRuneSlice(filler []rune) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
-		// Make our own copy of the slice
-		constructor.fillerRunes = make([]rune, len(filler))
-		copy(constructor.fillerRunes, filler)
+		// Convert the rune slice into a slice of strings, one for each rune
+		fillerStrings := make([]string, len(filler))
+		for i, r := range filler {
+			fillerStrings[i] = string(r)
+		}
+		constructor.fillerStrings = fillerStrings
 		return nil
 	}
 }
 
 // Combines a rune and a relative weight. This is used
 // with the FillWeighted option to the Construct function.
-type RuneWeight struct {
-	Rune   rune
+type FillerWeight struct {
+	String string
 	Weight int64
 }
 
 // Use the weighted runes in this slice for the filler. The weights
 // do not need to add up to any specific value. The Constructor will
 // sum the weights and calculate the percentages.
-func FillWeighted(filler []RuneWeight) WordSearchOption {
+func FillWeighted(filler []FillerWeight) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		// Make our own temporary copy of the slice, so we can
 		// sort it without destroying the caller's slice.
-		runeWeights := make([]RuneWeight, len(filler))
-		copy(runeWeights, filler)
+		fillerWeights := make([]FillerWeight, len(filler))
+		copy(fillerWeights, filler)
 
 		// Sort the slice, ascending, by weight
-		sort.Slice(runeWeights, func(i, j int) bool {
-			rwi := runeWeights[i]
-			rwj := runeWeights[j]
+		sort.Slice(fillerWeights, func(i, j int) bool {
+			rwi := fillerWeights[i]
+			rwj := fillerWeights[j]
 			if rwi.Weight == rwj.Weight {
-				return rwi.Rune < rwj.Rune
+				return rwi.String < rwj.String
 			} else {
 				return rwi.Weight < rwj.Weight
 			}
 		})
 
 		// Allocate our own slices
-		constructor.fillerRunes = make([]rune, len(filler))
+		constructor.fillerStrings = make([]string, len(filler))
 		constructor.fillerWeights = make([]int64, len(filler))
 
 		// Calculate the sum of all the weights, and adjust
-		// the running weight sum in each RuneWeight
-		for i, rw := range runeWeights {
+		// the running weight sum in each FillerWeight
+		for i, rw := range fillerWeights {
 			if rw.Weight <= 0 {
 				return ErrFillerWeightNotPositive
 			}
-			constructor.fillerRunes[i] = rw.Rune
+			constructor.fillerStrings[i] = rw.String
 			constructor.fillerWeightsSum += rw.Weight
 			constructor.fillerWeights[i] = constructor.fillerWeightsSum
 		}

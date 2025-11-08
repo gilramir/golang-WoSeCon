@@ -21,39 +21,29 @@ const (
 	ErrFillerWeightNotPositive ErrorString = "at least one filler rune's weight is <=0"
 )
 
-type DecomposedString struct {
-	Complete string
-	Parts    []string
-}
-
-// Construct a WordSearch. The minum size is 4x4, as anything less doesn't make
+// Construct a WordSearch, where each word is a Go string.
+// One rune fits in one puzzle cell.
+// The minum size is 4x4, as anything less doesn't make
 // sense as a puzzle. Duplicate words are removed.
 func Construct(numCols int, numRows int, words []string, opts ...WordSearchOption) (*WordSearch, error) {
-	var constructor wordSearchConstructor
-
-	if numRows < 4 || numCols < 4 {
-		return nil, ErrSmallerThanMinimumSize
+	sequences := make([]Sequence, len(words))
+	for i, word := range words {
+		sequences[i] = NewRuneSequence(word)
 	}
 
-	err := constructor.init(numCols, numRows, words, opts...)
-	if err != nil {
-		return nil, err
-	}
-	err = constructor.construct()
-	if err != nil {
-		return nil, err
-	}
-
-	return constructor.translateToWordSearch(), nil
+	return ConstructFromSequences(numCols, numRows, sequences, opts...)
 }
-func Construct(numCols int, numRows int, words []string, opts ...WordSearchOption) (*WordSearch, error) {
+
+// Construct a WordSerch, where each word is a slice of objects that are
+// comparable. One object fits in one puzzle cell.
+func ConstructFromSequences(numCols int, numRows int, sequences []Sequence, opts ...WordSearchOption) (*WordSearch, error) {
 	var constructor wordSearchConstructor
 
 	if numRows < 4 || numCols < 4 {
 		return nil, ErrSmallerThanMinimumSize
 	}
 
-	err := constructor.init(numCols, numRows, words, opts...)
+	err := constructor.init(numCols, numRows, sequences, opts...)
 	if err != nil {
 		return nil, err
 	}

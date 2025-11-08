@@ -16,6 +16,10 @@ type WordSearch struct {
 	// The number of rows in the puzzle
 	NumRows int
 
+	// Strings and how they are split into sequences
+	// This was used when constructing the puzzle
+	Sequences map[string]Sequence
+
 	// The "official" solution, as words and placements (location+direction)
 	// This solution was create by the algorithm
 	WordPlacements map[string]WordPlacement
@@ -34,17 +38,17 @@ type WordSearch struct {
 	// How many words have more than one solution
 	NumWordsWithMultipleSolutions int
 
-	// The "official" solution, as runes.
+	// The "official" solution.
 	// This solution was create by the algorithm and does not
 	// take into account other possible solutions after the filler
 	// was added.
 	// Places where filler would be in the grid are indicated by
-	// ASCII SPACE runes (" ").
+	// an empty string ("").
 	// First dimension is y (rows)
 	// Second dimension is x (column)
 	SolutionRows [][]string
 
-	// The puzzle, as runes
+	// The puzzle.
 	// Every cell is filled. It has the algorithm's "official" solution
 	// and the filler, combined.
 	// First dimension is y (rows)
@@ -53,7 +57,7 @@ type WordSearch struct {
 }
 
 // Indicate the placement of a word in the puzzle
-// by the (column, row) coordinate of its first rune,
+// by the (column, row) coordinate of its starting point,
 // and the direction in which the word goes.
 type WordPlacement struct {
 	Col       int
@@ -73,26 +77,30 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 	ws := &WordSearch{
 		NumCols:                   s.numCols,
 		NumRows:                   s.numRows,
+		Sequences:                 make(map[string]Sequence),
 		WordPlacements:            make(map[string]WordPlacement),
 		AllPossibleWordPlacements: make(map[string][]WordPlacement),
 		SolutionRows:              make([][]string, s.numRows),
 		PuzzleRows:                make([][]string, s.numRows),
 	}
+
 	// Allocate the columns, filled with empty strings
 	for row := 0; row < s.numRows; row++ {
 		ws.SolutionRows[row] = slices.Repeat([]string{""}, s.numCols)
 		ws.PuzzleRows[row] = slices.Repeat([]string{""}, s.numCols)
 	}
 
-	// Fill in the solution and puzzle
+	// Fill in the solution and puzzle, and copy the sequences
 	for _, wordInfo := range s.wordInfos {
+		ws.Sequences[wordInfo.seq.String()] = wordInfo.seq
+
 		dl := wordInfo.placement
 		direction := dl.direction
-		// If the word is only 1-rune long, it's directionless
-		if wordInfo.runeLen == 1 {
+		// If the word is only 1-item long, it's directionless
+		if wordInfo.seqLen == 1 {
 			direction = NilDirection
 		}
-		ws.WordPlacements[wordInfo.text] = WordPlacement{
+		ws.WordPlacements[wordInfo.seq.String()] = WordPlacement{
 			Col:       dl.col,
 			Row:       dl.row,
 			Direction: direction,
@@ -117,10 +125,10 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 
 		var col = dl.col
 		var row = dl.row
-		// Iterate rune by rune in the string
-		for _, r := range wordInfo.text {
-			ws.SolutionRows[row][col] = r
-			ws.PuzzleRows[row][col] = r
+		// Iterate item by item in the string
+		for _, cellItem := range wordInfo.seq.Items() {
+			ws.SolutionRows[row][col] = cellItem
+			ws.PuzzleRows[row][col] = cellItem
 			col += colAdj
 			row += rowAdj
 		}
@@ -129,7 +137,7 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 	// Add the filler
 	if len(s.fillerWeights) > 0 {
 		s.applyWeightedFiller(ws)
-	} else if len(s.fillerRunes) > 0 {
+	} else if len(s.fillerStrings) > 0 {
 		s.applyUniformFiller(ws)
 	}
 
@@ -152,8 +160,8 @@ func (s *wordSearchConstructor) applyUniformFiller(ws *WordSearch) {
 		for row := 0; row < ws.NumRows; row++ {
 			if s.isCellAvailable(col, row) {
 				// Pick a random number, thus picking a rune
-				n := s.rng.Intn(len(s.fillerRunes))
-				ws.PuzzleRows[row][col] = s.fillerRunes[n]
+				n := s.rng.Intn(len(s.fillerStrings))
+				ws.PuzzleRows[row][col] = s.fillerStrings[n]
 			}
 		}
 	}
@@ -169,7 +177,7 @@ func (s *wordSearchConstructor) applyWeightedFiller(ws *WordSearch) {
 				// weights
 				n, _ := slices.BinarySearch(s.fillerWeights, rn)
 				// Use that rune
-				ws.PuzzleRows[row][col] = s.fillerRunes[n]
+				ws.PuzzleRows[row][col] = s.fillerStrings[n]
 			}
 		}
 	}

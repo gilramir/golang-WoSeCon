@@ -19,64 +19,6 @@ const (
 	backwardMode algoMode = 'b'
 )
 
-type wordInfo struct {
-	DecomposedString
-	//	text            string
-	//	runeLen         int
-	placement       directedLocation
-	testedLocations []directedLocation
-}
-
-func newWordInfo(dcstring DecomposedString) *wordInfo {
-	return &wordInfo{
-		DecomposedString: dcstring,
-		//		text:            text,
-		//		runeLen:         utf8.RuneCountInString(text),
-		placement:       nilDirectedLocation(),
-		testedLocations: make([]directedLocation, 0),
-	}
-}
-
-func (s *wordInfo) getPlacement() directedLocation {
-	return s.placement
-}
-
-func (s *wordInfo) getTested() []directedLocation {
-	return s.testedLocations
-}
-
-func (s *wordInfo) moveLocationToTested() {
-	s.testedLocations = append(s.testedLocations, s.placement)
-	s.placement = nilDirectedLocation()
-}
-
-func (s *wordInfo) deleteTested() {
-	s.testedLocations = nil
-}
-
-func (s *wordInfo) runeLen() {
-	return len(s.Parts)
-}
-
-type directedLocation struct {
-	col       int
-	row       int
-	direction Direction
-}
-
-// XXX don't need this; Go's == will work.
-func (s directedLocation) equals(target directedLocation) bool {
-	return s.col == target.col && s.row == target.row && s.direction == target.direction
-}
-
-// Return a nil DirectedLocation, which has -1 col/row
-func nilDirectedLocation() directedLocation {
-	return directedLocation{-1, -1, 0}
-}
-func isNilDirectedLocation(d directedLocation) bool {
-	return d.col == -1 || d.row == -1
-}
-
 type wordSearchConstructor struct {
 	numCols            int
 	numRows            int
@@ -85,7 +27,6 @@ type wordSearchConstructor struct {
 	mode               algoMode
 	locator            randomLocator
 	cellMatrix         cellMatrix
-	//	badWords           []string
 
 	randomSeed      int64
 	randomSeedGiven bool
@@ -94,14 +35,14 @@ type wordSearchConstructor struct {
 	// Used for uniformly filling in the puzzle, and
 	// also as one of the data structures for filling in
 	// by weights
-	fillerRunes []string
+	fillerStrings []string
 
 	// Used for filling in the puzzle by weights
 	fillerWeights    []int64
 	fillerWeightsSum int64
 }
 
-func (s *wordSearchConstructor) init(numCols int, numRows int, dcstrings []DecomposedStrings, opts ...WordSearchOption) error {
+func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Sequence, opts ...WordSearchOption) error {
 
 	s.numCols = numCols
 	s.numRows = numRows
@@ -109,15 +50,15 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, dcstrings []Decom
 
 	// Use the list of words (strings) from the user
 	// to create our wordInfo objects, but unique-ify the word lsit
-	s.wordInfos = make([]*wordInfo, 0, len(words))
+	s.wordInfos = make([]*wordInfo, 0, len(sequences))
 
 	seen := make(map[string]bool)
-	for _, dcstring := range dcstrings {
-		if seen[dcstring.Complete] {
+	for _, seq := range sequences {
+		if seen[seq.String()] {
 			continue
 		}
-		s.wordInfos = append(s.wordInfos, newWordInfo(dcstring))
-		seen[dcstring.Complete] = true
+		s.wordInfos = append(s.wordInfos, newWordInfo(seq))
+		seen[seq.String()] = true
 	}
 
 	// Apply the options
@@ -143,7 +84,7 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, dcstrings []Decom
 	}
 
 	for _, wordInfo := range s.wordInfos {
-		if wordInfo.runeLen > maxWordSize {
+		if wordInfo.seqLen > maxWordSize {
 			return ErrWordIsTooLong
 		}
 	}
@@ -161,11 +102,12 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, dcstrings []Decom
 	sort.Slice(s.wordInfos, func(i, j int) bool {
 		wi := s.wordInfos[i]
 		wj := s.wordInfos[j]
-		if wi.runeLen() == wj.runeLen() {
-			return wi.Complete < wj.Complete
+		if wi.seqLen == wj.seqLen {
+			// is wi < wj?
+			return wi.seq.Cmp(wj.seq) == -1
 		} else {
 			// Descending order
-			return wj.runeLen() < wi.runeLen()
+			return wj.seqLen < wi.seqLen
 		}
 	})
 	return nil
@@ -264,19 +206,19 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 
 	// Find endRow
 	if location.direction&GoesDownward > 0 {
-		endRow = startRow + wordInfo.runeLen()
+		endRow = startRow + wordInfo.seqLen
 		rowAdj = 1
 	} else if location.direction&GoesUpward > 0 {
-		endRow = startRow - wordInfo.runeLen()
+		endRow = startRow - wordInfo.seqLen
 		rowAdj = -1
 	} // else horizontal
 
 	// Find endCol
 	if location.direction&GoesLTR != 0 {
-		endCol = startCol + wordInfo.runeLen()
+		endCol = startCol + wordInfo.seqLen
 		colAdj = 1
 	} else if location.direction&GoesRTL != 0 {
-		endCol = startCol - wordInfo.runeLen()
+		endCol = startCol - wordInfo.seqLen
 		colAdj = -1
 	} // else vertical
 
@@ -292,7 +234,7 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Check if each coordinate is unused
 	col := startCol
 	row := startRow
-	for i := 0; i < wordInfo.runeLen(); i++ {
+	for i := 0; i < wordInfo.seqLen; i++ {
 		if !s.isCellAvailable(col, row) {
 			// log.Printf("validPlacement %s overlap at col=%d row=%d", wordInfo.text, col, row)
 			return false
@@ -307,7 +249,7 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Mark the cells as used
 	col = startCol
 	row = startRow
-	for i := 0; i < wordInfo.runeLen(); i++ {
+	for i := 0; i < wordInfo.seqLen; i++ {
 		s.setCellUsed(col, row)
 		col += colAdj
 		row += rowAdj
@@ -340,7 +282,7 @@ func (s *wordSearchConstructor) clearPlacement(wordInfo *wordInfo) {
 	col := location.col
 	row := location.row
 	//	log.Printf("clearPlacement %s at col=%d row=%d", wordInfo.text, col, row)
-	for i := 0; i < wordInfo.runeLen; i++ {
+	for i := 0; i < wordInfo.seqLen; i++ {
 		s.setCellAvailable(col, row)
 		col += colAdj
 		row += rowAdj
