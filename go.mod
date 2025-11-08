@@ -1,4 +1,4 @@
-module github.com/gilramir/golang-WoSeCon
+module github.com/gilramir/golang-WoSeCon/v2
 
 go 1.25.1
 

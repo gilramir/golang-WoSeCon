@@ -5,7 +5,10 @@
 
 package wosecon
 
-import "sort"
+import (
+	"slices"
+	"sort"
+)
 
 // This type used by options which can be given to Construct()
 // Construct accepts zero or more options.
@@ -68,6 +71,17 @@ func FillUniformlyFromString(filler string) WordSearchOption {
 	}
 }
 
+// Use the strings in this slice for the filler. Every string has
+// an equal chance of being used. This routine makes a private
+// copy of the slice.
+func FillUniformlyFromStringSlice(filler []string) WordSearchOption {
+	return func(constructor *wordSearchConstructor) error {
+		// Copy the user's slice
+		constructor.fillerStrings = slices.Clone(filler)
+		return nil
+	}
+}
+
 // Use the runes in this slice for the filler. Every rune has
 // an equal chance of being used
 func FillUniformlyFromRuneSlice(filler []rune) WordSearchOption {
@@ -82,7 +96,7 @@ func FillUniformlyFromRuneSlice(filler []rune) WordSearchOption {
 	}
 }
 
-// Combines a rune and a relative weight. This is used
+// Combines a string for a cell's item and a relative weight. This is used
 // with the FillWeighted option to the Construct function.
 type FillerWeight struct {
 	String string

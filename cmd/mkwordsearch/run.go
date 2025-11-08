@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	wosecon "github.com/gilramir/golang-WoSeCon"
+	wosecon "github.com/gilramir/golang-WoSeCon/v2"
 )
 
 const (
@@ -37,7 +37,7 @@ func (s *Program) run() error {
 		if err != nil {
 			return err
 		}
-		runeWeights := make([]wosecon.RuneWeight, 0)
+		fillerWeights := make([]wosecon.FillerWeight, 0)
 
 		scanner := bufio.NewScanner(fh)
 		lineno := 0
@@ -48,13 +48,14 @@ func (s *Program) run() error {
 			if len(fields) != 2 {
 				continue
 			}
-			weight, err := strconv.ParseInt(fields[1], 10, 64)
+			character, weightText := fields[0], fields[1]
+			weight, err := strconv.ParseInt(weightText, 10, 64)
 			if err != nil {
 				fh.Close()
 				return fmt.Errorf("In %s on line %d: %w", s.WeightsFilename, lineno, err)
 			}
-			runeWeights = append(runeWeights, wosecon.RuneWeight{
-				Rune:   []rune(fields[0])[0],
+			fillerWeights = append(fillerWeights, wosecon.FillerWeight{
+				String: character,
 				Weight: weight,
 			})
 		}
@@ -65,7 +66,7 @@ func (s *Program) run() error {
 		}
 		fh.Close()
 
-		wsOptions[0] = wosecon.FillWeighted(runeWeights)
+		wsOptions[0] = wosecon.FillWeighted(fillerWeights)
 	}
 
 	ws, err := wosecon.Construct(s.NumCols, s.NumRows, words, wsOptions...)
@@ -89,7 +90,7 @@ func (s *Program) run() error {
 	return nil
 }
 
-func (s *Program) printRows(rows [][]rune) {
+func (s *Program) printRows(rows [][]string) {
 	// Header
 	fmt.Print("   ")
 	for col := 0; col < len(rows[0]); col++ {
@@ -101,8 +102,11 @@ func (s *Program) printRows(rows [][]rune) {
 	// Body
 	for row, rowSlice := range rows {
 		fmt.Printf("%2d ", row)
-		for _, cellRune := range rowSlice {
-			fmt.Printf(" %s ", string(cellRune))
+		for _, cellString := range rowSlice {
+			if cellString == "" {
+				cellString = " "
+			}
+			fmt.Printf(" %s ", cellString)
 		}
 		fmt.Println()
 		fmt.Println()

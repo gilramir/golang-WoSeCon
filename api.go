@@ -18,7 +18,7 @@ const (
 	ErrCannotFitWords          ErrorString = "the words cannot be placed into this size of grid"
 	ErrSmallerThanMinimumSize  ErrorString = "the grid must be at least 4x4"
 	ErrWordIsTooLong           ErrorString = "at least one word is larger than the grid dimensions"
-	ErrFillerWeightNotPositive ErrorString = "at least one filler rune's weight is <=0"
+	ErrFillerWeightNotPositive ErrorString = "at least one filler string's weight is <= 0"
 )
 
 // Construct a WordSearch, where each word is a Go string.
