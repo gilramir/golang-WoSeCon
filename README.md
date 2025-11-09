@@ -186,6 +186,6 @@ type Sequence interface {
 	Items() iter.Seq2[int, string]
 }
 ```
-The **NewRuneSequence** and **NewStringSequence** provide Sequences for normal
+The **NewRuneSequence** and **NewStringSequence** functions provide Sequences for normal
 words (a string of runes), and multi-rune-per-cell sequences
 (NewStringSequence).  You can implement your own Sequence, of course.
