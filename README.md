@@ -54,32 +54,12 @@ wordSearch, err := wosecon.Construct(numColumns, numRows, words,
     wosecond.FillUniformlyFromString(alphabet))
 ```
 
-If you need to have more than one run per cell in the grid, you need to make a
-Sequence for each "word", and use.
-
-* **ConstructFromSequences(numCols, numRows, sequences, ...options)**
-
-Where a Sequence is
-```
-type Sequence interface {
-	String() string
-	Len() int
-	Cmp(Sequence) int
-	Index(int) string
-	Items() iter.Seq2[int, string]
-}
-```
-The **NewRuneSequence** and **NewStringSequence** provide Sequences for normal
-words (a string of runes), and multi-rune-per-cell sequences
-(NewStringSequence).  You can implement your own Sequence, of course.
-
-
-The WordSearch object gives you the placement of each word. A placement
+The **WordSearch** object gives you the placement of each word. A placement
 is the starting colum and row, and direction of the word. It also gives
 you a matrix of strings for the solution (the puzzle with no filler), and
 the complete puzzle (solution + filler)
 
-If you print the Solution, it would look something like this. However,
+If you print the **Solution**, it would look something like this. However,
 empty cells in the grid are given as empty string, so you must take that
 into account when printing.
 ```
@@ -96,7 +76,7 @@ into account when printing.
  4  T              E
 ```
 
-If you print the Puzzle, which has the Solution and the empty cells are filled
+If you print the **Puzzle**, which has the **Solution** and the empty cells are filled
 randomly, you might see this:
 ```
     0  1  2  3  4  5  6  7
@@ -184,5 +164,28 @@ The options are:
 
 ## Errors
 
-The Constructor function wil return only a handful of specific errors, provided
+The **Constructor** functions will return only a handful of specific errors, provided
 a constants starting with the name "Err". See the documentation for the values.
+
+## Cells with more than one Rune
+
+If you need to have more than one run per cell in the grid, you need to make a
+Sequence for each "word", and use. I needed this when making a puzzle game for
+the Thai language, in which one "character" can be a combination of multiple
+Unicode code points.
+
+* **ConstructFromSequences(numCols, numRows, sequences, ...options)**
+
+Where a **Sequence** is
+```
+type Sequence interface {
+	String() string
+	Len() int
+	Cmp(Sequence) int
+	Index(int) string
+	Items() iter.Seq2[int, string]
+}
+```
+The **NewRuneSequence** and **NewStringSequence** provide Sequences for normal
+words (a string of runes), and multi-rune-per-cell sequences
+(NewStringSequence).  You can implement your own Sequence, of course.
