@@ -37,6 +37,9 @@ It is a very simple CLI tool which is useful during development testing.
 
 Construct a WordSearch with one simple function call:
 
+* **Construct(numCols, numRows, words, ...options)** - this adds all Right-to-left directions,
+    and Up, to the list of possible directions for the solution.
+
 ```
 import (
     wosecon "github.com/gilramir/golang-WoSeCon/v2"
@@ -50,6 +53,26 @@ alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 wordSearch, err := wosecon.Construct(numColumns, numRows, words,
     wosecond.FillUniformlyFromString(alphabet))
 ```
+
+If you need to have more than one run per cell in the grid, you need to make a
+Sequence for each "word", and use.
+
+* **ConstructFromSequences(numCols, numRows, sequences, ...options)**
+
+Where a Sequence is
+```
+type Sequence interface {
+	String() string
+	Len() int
+	Cmp(Sequence) int
+	Index(int) string
+	Items() iter.Seq2[int, string]
+}
+```
+The **NewRuneSequence** and **NewStringSequence** provide Sequences for normal
+words (a string of runes), and multi-rune-per-cell sequences
+(NewStringSequence).  You can implement your own Sequence, of course.
+
 
 The WordSearch object gives you the placement of each word. A placement
 is the starting colum and row, and direction of the word. It also gives
