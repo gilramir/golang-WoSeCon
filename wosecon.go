@@ -140,6 +140,8 @@ func (s *wordSearchConstructor) construct() error {
 			select {
 			case _ = <-timer.C:
 				return ErrReachedTimeLimit
+			default:
+				// keep going
 			}
 		}
 

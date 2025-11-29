@@ -80,3 +80,8 @@ var ko_country_names []string = []string{
    // "뉴질랜드",
    // "호주",
 }
+
+var ko_kdh []string = []string{
+    "귀신", "혼문", "사신", "악마",
+    "봉인", "무대", "응원법", "마음", "자유",
+}

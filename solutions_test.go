@@ -264,3 +264,16 @@ func (s *MySuite) TestSolutions06(c *C) {
 	)
 	c.Assert(apiError, Equals, ErrReachedTimeLimit)
 }
+
+// Test a solution that does solve quickly, but using a timer
+func (s *MySuite) TestSolutions07(c *C) {
+
+	filler := "x"
+	_, apiError := Construct(10, 12, ko_kdh,
+		FillUniformlyFromString(filler),
+		AddNaturalLTRDirections(),
+		RandomSeed(42),
+		WithTimeLimit(time.Duration(2)*time.Second),
+	)
+	c.Assert(apiError, IsNil)
+}
