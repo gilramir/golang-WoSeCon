@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"time"
 )
 
 // The algorithm works in 2 modoes, forward or backward
@@ -40,6 +41,9 @@ type wordSearchConstructor struct {
 	// Used for filling in the puzzle by weights
 	fillerWeights    []int64
 	fillerWeightsSum int64
+
+	// Optional time limit
+	timeLimit time.Duration
 }
 
 func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Sequence, opts ...WordSearchOption) error {
@@ -121,7 +125,24 @@ func (s *wordSearchConstructor) construct() error {
 	s.mode = forwardMode
 	currentWordIndex := 0
 	currentWord := s.wordInfos[currentWordIndex]
+
+	// Configure the timer, if we have a time limit
+	var timer *time.Timer
+	hasTimeLimit := s.timeLimit.Milliseconds() > 0
+	if hasTimeLimit {
+		timer = time.NewTimer(s.timeLimit)
+		defer timer.Stop()
+	}
+
 	for {
+		// Reached our time limit?
+		if hasTimeLimit {
+			select {
+			case _ = <-timer.C:
+				return ErrReachedTimeLimit
+			}
+		}
+
 		if s.locateOne(currentWord) {
 			//			s.cellMatrix.show(s.numCols)
 			if currentWordIndex == len(s.wordInfos)-1 {

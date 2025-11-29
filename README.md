@@ -162,6 +162,11 @@ The options are:
 		wosecon.FillWeighted(fillerWeights))
 ```
 
+* **WithTimeLimit(time.Duration)** - if your input may contain very large
+    lists of words that cannot create a puzzle due to size, this sets
+    a maximum time that the algorith wwill run. If the time limit is reached,
+    ErrReachedTimeLimit is returned.
+
 ## Errors
 
 The **Constructor** functions will return only a handful of specific errors, provided

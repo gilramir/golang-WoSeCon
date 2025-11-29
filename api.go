@@ -19,6 +19,7 @@ const (
 	ErrSmallerThanMinimumSize  ErrorString = "the grid must be at least 4x4"
 	ErrWordIsTooLong           ErrorString = "at least one word is larger than the grid dimensions"
 	ErrFillerWeightNotPositive ErrorString = "at least one filler string's weight is <= 0"
+	ErrReachedTimeLimit        ErrorString = "reached time limit before finding solution"
 )
 
 // Construct a WordSearch, where each word is a Go string.

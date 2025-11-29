@@ -8,6 +8,7 @@ package wosecon
 import (
 	"slices"
 	"sort"
+	"time"
 )
 
 // This type used by options which can be given to Construct()
@@ -139,6 +140,15 @@ func FillWeighted(filler []FillerWeight) WordSearchOption {
 			constructor.fillerWeights[i] = constructor.fillerWeightsSum
 		}
 
+		return nil
+	}
+}
+
+// Set the time limit for constructing the puzzle. If the time limit is
+// reached before finding a solution, ErrReachedTimeLimit is returned.
+func WithTimeLimit(duration time.Duration) WordSearchOption {
+	return func(constructor *wordSearchConstructor) error {
+		constructor.timeLimit = duration
 		return nil
 	}
 }

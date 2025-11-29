@@ -7,6 +7,7 @@ package wosecon
 
 import (
 	"fmt"
+	"time"
 
 	//	. "github.com/gilramir/gocheck-extra"
 	. "gopkg.in/check.v1"
@@ -249,4 +250,17 @@ func (s *MySuite) TestSolutions05(c *C) {
 		AddNaturalLTRDirections(),
 		RandomSeed(8))
 	c.Assert(apiError, IsNil)
+}
+
+// This takes an extraordinarly long time if no time limit is given.
+func (s *MySuite) TestSolutions06(c *C) {
+
+	filler := "x"
+	_, apiError := Construct(7, 5, ko_country_names,
+		FillUniformlyFromString(filler),
+		AddNaturalLTRDirections(),
+		RandomSeed(0),
+		WithTimeLimit(time.Duration(2)*time.Second),
+	)
+	c.Assert(apiError, Equals, ErrReachedTimeLimit)
 }
