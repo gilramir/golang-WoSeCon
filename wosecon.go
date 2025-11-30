@@ -183,7 +183,6 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 		s.locator.add(dl)
 		currentWord.moveLocationToTested()
 		localLocator = s.locator.minus(currentWord.getTested())
-		//localLocator = s.locator.minusForLength(currentWord.getTested(), currentWord.seqLen)
 	} else {
 		localLocator = &s.locator
 	}
@@ -201,11 +200,6 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 			} else {
 				s.locator.remove(suitableLocation)
 			}
-			//			t0 := time.Now()
-			//			fmt.Printf("removing %v at %d len\n", suitableLocation, currentWord.seqLen)
-			//s.locator.removeLocationForLength(suitableLocation, currentWord.seqLen)
-			//			duration := time.Now().Sub(t0)
-			//			fmt.Printf("done removing in %s\n", duration)
 			return true
 		}
 	}
@@ -287,7 +281,6 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Mark the cells as used
 	col = startCol
 	row = startRow
-	//for i := 0; i < wordInfo.seqLen; i++ {
 	for _, seqString := range wordInfo.seq.Items() {
 		s.solutionMatrix.setCellUsedFor(col, row, seqString)
 		col += colAdj
