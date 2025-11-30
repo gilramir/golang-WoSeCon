@@ -251,9 +251,13 @@ func (s *MySuite) TestSolutions05(c *C) {
 	c.Assert(apiError, IsNil)
 }
 
-// This takes an extraordinarly long time if no time limit is given.
-// re-impl; at 600s, crash; ut framework itself has a 10min timeout!
-// but the routine is faster
+// When we forgot to allow overlapping solutions, this would
+// take an extraordinarly long time to solve. Was it in an infinite
+// loop? I'm not sure, but it's the reaosn I added WithTimeLimit().
+// However, once we allowed overlapping solutions, a solution
+// for this puzzle is found very quickly.
+// Interestingly, the solution fills every single cell of the puzzle.
+// There is no random filler at all.
 func (s *MySuite) TestSolutions06(c *C) {
 
 	filler := "x"
@@ -267,7 +271,8 @@ func (s *MySuite) TestSolutions06(c *C) {
 		RandomSeed(0),
 		WithTimeLimit(time.Duration(2)*time.Second),
 	)
-	c.Assert(apiError, Equals, ErrReachedTimeLimit)
+	//c.Assert(apiError, Equals, ErrReachedTimeLimit)
+	c.Assert(apiError, IsNil)
 }
 
 // Test a solution that does solve quickly, but using a timer
@@ -281,4 +286,32 @@ func (s *MySuite) TestSolutions07(c *C) {
 		WithTimeLimit(time.Duration(2)*time.Second),
 	)
 	c.Assert(apiError, IsNil)
+}
+
+// The only solution is overlapping
+func (s *MySuite) TestSolutions08(c *C) {
+
+	words := []string{"cart", "cat", "ant", "rat", "tax"}
+
+	filler := "x"
+	_, apiError := Construct(4, 3, words,
+		FillUniformlyFromString(filler),
+		AddDirection(LTRHorizontal|Down),
+	)
+	c.Assert(apiError, IsNil)
+}
+
+// Try the original version of the korean country name,
+// with the entire list the user submitted. This will hit
+// the time limit.
+func (s *MySuite) TestSolutions09(c *C) {
+
+	filler := "x"
+	_, apiError := Construct(7, 5, ko_country_names_long,
+		FillUniformlyFromString(filler),
+		AddNaturalLTRDirections(),
+		RandomSeed(0),
+		WithTimeLimit(time.Duration(2)*time.Second),
+	)
+	c.Assert(apiError, Equals, ErrReachedTimeLimit)
 }

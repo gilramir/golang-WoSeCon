@@ -23,7 +23,6 @@ func (s *randomLocator) get(n int) directedLocation {
 	return s.availableLocations[n]
 }
 
-/*
 func (s *randomLocator) add(d directedLocation) {
 	s.availableLocations = append(s.availableLocations, d)
 }
@@ -54,8 +53,8 @@ func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
 	}
 	return newLocator
 }
-*/
 
+/*
 func (s *randomLocator) addLocationForLength(startLoc directedLocation, seqLen int, dlmatrix *directedLocationMatrix) {
 
 	location := startLoc
@@ -153,6 +152,7 @@ func (s *randomLocator) minusForLength(targets []directedLocation, seqLen int) *
 	}
 	return newLocator
 }
+*/
 
 // Create all the directedLocations that fit within the possible directions
 // the caller set.
@@ -164,7 +164,7 @@ func (s *randomLocator) initialize(dlmatrix *directedLocationMatrix, rng *rand.R
 	rng.Shuffle(len(s.availableLocations), func(i, j int) {
 		s.availableLocations[i], s.availableLocations[j] = s.availableLocations[j], s.availableLocations[i]
 	})
-	fmt.Printf("locator init: %d directedlocations\n", len(s.availableLocations))
+	//	fmt.Printf("locator init: %d directedlocations\n", len(s.availableLocations))
 
 	/*
 		for i, d := range s.availableLocations {

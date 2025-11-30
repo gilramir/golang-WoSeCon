@@ -28,6 +28,7 @@ type wordSearchConstructor struct {
 	mode               algoMode
 	locator            randomLocator
 	cellMatrix         cellMatrix
+	solutionMatrix     solutionMatrix
 	dlmatrix           directedLocationMatrix
 
 	randomSeed      int64
@@ -52,6 +53,7 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 	s.numCols = numCols
 	s.numRows = numRows
 	s.cellMatrix = newCellMatrix(numCols, numRows)
+	s.solutionMatrix.initialize(numCols, numRows)
 
 	// Use the list of words (strings) from the user
 	// to create our wordInfo objects, but unique-ify the word lsit
@@ -139,6 +141,7 @@ func (s *wordSearchConstructor) construct() error {
 
 	for {
 		//		fmt.Printf("currentWordIndex=%d\n", currentWordIndex)
+		//		s.solutionMatrix.dump()
 		// Reached our time limit?
 		if hasTimeLimit {
 			select {
@@ -185,11 +188,11 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 
 	if s.mode == backwardMode {
 		dl := currentWord.getPlacement()
-		//s.locator.add(dl)
-		s.locator.addLocationForLength(dl, currentWord.seqLen, &s.dlmatrix)
+		s.locator.add(dl)
+		//s.locator.addLocationForLength(dl, currentWord.seqLen, &s.dlmatrix)
 		currentWord.moveLocationToTested()
-		//localLocator = s.locator.minus(currentWord.getTested())
-		localLocator = s.locator.minusForLength(currentWord.getTested(), currentWord.seqLen)
+		localLocator = s.locator.minus(currentWord.getTested())
+		//localLocator = s.locator.minusForLength(currentWord.getTested(), currentWord.seqLen)
 	} else {
 		localLocator = &s.locator
 	}
@@ -202,16 +205,14 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	for locationIndex := 0; locationIndex < localLocator.size(); locationIndex++ {
 		suitableLocation := localLocator.get(locationIndex)
 		if s.validPlacement(currentWord, suitableLocation) {
-			/*
-				if localLocator == &s.locator {
-					s.locator.removeN(locationIndex)
-				} else {
-					s.locator.remove(suitableLocation)
-				}
-			*/
+			if localLocator == &s.locator {
+				s.locator.removeN(locationIndex)
+			} else {
+				s.locator.remove(suitableLocation)
+			}
 			//			t0 := time.Now()
 			//			fmt.Printf("removing %v at %d len\n", suitableLocation, currentWord.seqLen)
-			s.locator.removeLocationForLength(suitableLocation, currentWord.seqLen)
+			//s.locator.removeLocationForLength(suitableLocation, currentWord.seqLen)
 			//			duration := time.Now().Sub(t0)
 			//			fmt.Printf("done removing in %s\n", duration)
 			return true
@@ -274,11 +275,14 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 		return false
 	}
 
-	// Check if each coordinate is unused
+	// Check if each coordinate is unused, or, if used, has the same
+	// content that we need
 	col := startCol
 	row := startRow
-	for i := 0; i < wordInfo.seqLen; i++ {
-		if !s.isCellAvailable(col, row) {
+	//	for i := 0; i < wordInfo.seqLen; i++ {
+	//if !s.isCellAvailable(col, row) {
+	for _, seqString := range wordInfo.seq.Items() {
+		if !s.solutionMatrix.isCellAvailableFor(col, row, seqString) {
 			// log.Printf("validPlacement %s overlap at col=%d row=%d", wordInfo.text, col, row)
 			return false
 		}
@@ -292,8 +296,9 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	// Mark the cells as used
 	col = startCol
 	row = startRow
-	for i := 0; i < wordInfo.seqLen; i++ {
-		s.setCellUsed(col, row)
+	//for i := 0; i < wordInfo.seqLen; i++ {
+	for _, seqString := range wordInfo.seq.Items() {
+		s.solutionMatrix.setCellUsedFor(col, row, seqString)
 		col += colAdj
 		row += rowAdj
 	}
@@ -326,12 +331,13 @@ func (s *wordSearchConstructor) clearPlacement(wordInfo *wordInfo) {
 	row := location.row
 	//	log.Printf("clearPlacement %s at col=%d row=%d", wordInfo.text, col, row)
 	for i := 0; i < wordInfo.seqLen; i++ {
-		s.setCellAvailable(col, row)
+		s.solutionMatrix.setCellAvailable(col, row)
 		col += colAdj
 		row += rowAdj
 	}
 }
 
+/*
 func (s *wordSearchConstructor) isCellAvailable(col, row int) bool {
 	return s.cellMatrix.isAvailable(col, row, s.numCols)
 }
@@ -343,3 +349,4 @@ func (s *wordSearchConstructor) setCellUsed(col, row int) {
 func (s *wordSearchConstructor) setCellAvailable(col, row int) {
 	s.cellMatrix.setAvailable(col, row, s.numCols)
 }
+*/

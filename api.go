@@ -40,7 +40,7 @@ func Construct(numCols int, numRows int, words []string, opts ...WordSearchOptio
 func ConstructFromSequences(numCols int, numRows int, sequences []Sequence, opts ...WordSearchOption) (*WordSearch, error) {
 	var constructor wordSearchConstructor
 
-	if numRows < 4 || numCols < 4 {
+	if numRows < 3 || numCols < 3 {
 		return nil, ErrSmallerThanMinimumSize
 	}
 

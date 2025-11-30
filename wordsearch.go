@@ -158,7 +158,7 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 func (s *wordSearchConstructor) applyUniformFiller(ws *WordSearch) {
 	for col := 0; col < ws.NumCols; col++ {
 		for row := 0; row < ws.NumRows; row++ {
-			if s.isCellAvailable(col, row) {
+			if s.solutionMatrix.isCellEmpty(col, row) {
 				// Pick a random number, thus picking a rune
 				n := s.rng.Intn(len(s.fillerStrings))
 				ws.PuzzleRows[row][col] = s.fillerStrings[n]
@@ -170,7 +170,7 @@ func (s *wordSearchConstructor) applyUniformFiller(ws *WordSearch) {
 func (s *wordSearchConstructor) applyWeightedFiller(ws *WordSearch) {
 	for col := 0; col < ws.NumCols; col++ {
 		for row := 0; row < ws.NumRows; row++ {
-			if s.isCellAvailable(col, row) {
+			if s.solutionMatrix.isCellEmpty(col, row) {
 				// Pick a random number
 				rn := s.rng.Int63n(s.fillerWeightsSum)
 				// Find where it would fit in the slice of
