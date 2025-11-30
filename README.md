@@ -26,6 +26,7 @@ words and replacing them, until the entire solution space has been exhausted.
 Under normal conditions, this does not take a long time.
 
 Other WoSeCon implementations:
+* **C++** - The reference implementation, at https://github.com/lmous/WoSeCon
 * **.NET** - https://github.com/martinrotter/wordsearch-wosecon
 
 ## Code
