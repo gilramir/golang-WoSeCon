@@ -27,7 +27,6 @@ type wordSearchConstructor struct {
 	possibleDirections Direction
 	mode               algoMode
 	locator            randomLocator
-	cellMatrix         cellMatrix
 	solutionMatrix     solutionMatrix
 	dlmatrix           directedLocationMatrix
 
@@ -52,7 +51,6 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 
 	s.numCols = numCols
 	s.numRows = numRows
-	s.cellMatrix = newCellMatrix(numCols, numRows)
 	s.solutionMatrix.initialize(numCols, numRows)
 
 	// Use the list of words (strings) from the user
@@ -153,7 +151,6 @@ func (s *wordSearchConstructor) construct() error {
 		}
 
 		if s.locateOne(currentWord) {
-			//s.cellMatrix.show(s.numCols)
 			if currentWordIndex == len(s.wordInfos)-1 {
 				// Finished
 				break
@@ -163,7 +160,6 @@ func (s *wordSearchConstructor) construct() error {
 			s.mode = forwardMode
 		} else {
 			//			fmt.Printf("Need to backtrack, currentWordIndex=%d\n", currentWordIndex)
-			//			s.cellMatrix.show(s.numCols)
 			// Couldn't place a word. Go backwards
 			if currentWordIndex == 0 {
 				return ErrCannotFitWords
@@ -173,7 +169,6 @@ func (s *wordSearchConstructor) construct() error {
 				currentWord = s.wordInfos[currentWordIndex]
 				s.clearPlacement(currentWord)
 				s.mode = backwardMode
-				//				s.cellMatrix.show(s.numCols)
 			}
 		}
 	}
@@ -336,17 +331,3 @@ func (s *wordSearchConstructor) clearPlacement(wordInfo *wordInfo) {
 		row += rowAdj
 	}
 }
-
-/*
-func (s *wordSearchConstructor) isCellAvailable(col, row int) bool {
-	return s.cellMatrix.isAvailable(col, row, s.numCols)
-}
-
-func (s *wordSearchConstructor) setCellUsed(col, row int) {
-	s.cellMatrix.setUsed(col, row, s.numCols)
-}
-
-func (s *wordSearchConstructor) setCellAvailable(col, row int) {
-	s.cellMatrix.setAvailable(col, row, s.numCols)
-}
-*/
