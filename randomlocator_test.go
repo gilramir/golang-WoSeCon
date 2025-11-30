@@ -5,8 +5,9 @@
 
 package wosecon
 
-/*
 import (
+	"math/rand"
+
 	. "github.com/gilramir/gocheck-extra"
 	. "gopkg.in/check.v1"
 )
@@ -74,4 +75,3 @@ func (s *MySuite) TestRandomLocator02(c *C) {
 	c.Assert(targetdl, Not(InSlice), newLocator.availableLocations)
 
 }
-*/
