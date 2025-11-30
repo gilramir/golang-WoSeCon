@@ -256,8 +256,8 @@ func (s *MySuite) TestSolutions05(c *C) {
 // loop? I'm not sure, but it's the reaosn I added WithTimeLimit().
 // However, once we allowed overlapping solutions, a solution
 // for this puzzle is found very quickly.
-// Interestingly, the solution fills every single cell of the puzzle.
-// There is no random filler at all.
+// Interestingly, the solution fills almost every single cell of the puzzle;
+// only one cell is empty, for random filler.
 func (s *MySuite) TestSolutions06(c *C) {
 
 	filler := "x"

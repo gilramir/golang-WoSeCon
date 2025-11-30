@@ -164,7 +164,7 @@ The options are:
 
 * **WithTimeLimit(time.Duration)** - if your input may contain very large
     lists of words that cannot create a puzzle due to size, this sets
-    a maximum time that the algorith wwill run. If the time limit is reached,
+    a maximum time that the algorithm will run. If the time limit is reached,
     ErrReachedTimeLimit is returned.
 
 ## Errors
