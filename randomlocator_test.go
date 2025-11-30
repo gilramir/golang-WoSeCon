@@ -15,8 +15,10 @@ import (
 func (s *MySuite) TestRandomLocator01(c *C) {
 	rng := rand.New(rand.NewSource(42))
 
+	var dlmatrix directedLocationMatrix
+	dlmatrix.initialize(2, 3, Down|Up)
 	var locator randomLocator
-	locator.initialize(2, 3, Down|Up, rng)
+	locator.initialize(&dlmatrix, rng)
 
 	// # of locations = # row * # cols * # directions
 	// +-------+-------+
@@ -49,8 +51,10 @@ func (s *MySuite) TestRandomLocator01(c *C) {
 func (s *MySuite) TestRandomLocator02(c *C) {
 	rng := rand.New(rand.NewSource(42))
 
+	var dlmatrix directedLocationMatrix
+	dlmatrix.initialize(2, 3, Down|Up)
 	var locator randomLocator
-	locator.initialize(2, 3, Down|Up, rng)
+	locator.initialize(&dlmatrix, rng)
 
 	// # of locations (see TestRandomLocator01)
 	c.Assert(locator.size(), Equals, 8)

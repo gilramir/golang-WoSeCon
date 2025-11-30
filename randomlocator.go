@@ -42,6 +42,96 @@ func (s *randomLocator) removeN(index int) {
 	s.availableLocations = append(s.availableLocations[:index], s.availableLocations[index+1:]...)
 }
 
+/*
+func (s *rancomLocator) addLocationsForLength(startLoc directedLocation, seqLen int, possibleDirections Direction) {
+
+	location := startLoc
+	var colAdj int
+	var rowAdj int
+
+	// Find endRow
+	if location.direction&GoesDownward > 0 {
+		rowAdj = 1
+	} else if location.direction&GoesUpward > 0 {
+		rowAdj = -1
+	} // else horizontal
+
+	// Find endCol
+	if location.direction&GoesLTR != 0 {
+		colAdj = 1
+	} else if location.direction&GoesRTL != 0 {
+		colAdj = -1
+	} // else vertical
+
+	dlcons = DirectedLocationConstructor{
+		numRows:            numRows,
+		numCols:            numCols,
+		possibleDirections: possibleDirections,
+	}
+
+	col := location.col
+	row := location.row
+	for i := 0; i < wordInfo.seqLen; i++ {
+		newDirectedLocations = dlcons.constructPossibleDirectedLocations(col, row)
+
+		s.availableLocations = append(s.availableLocations, newDirectedLocations)
+
+		col += colAdj
+		row += rowAdj
+	}
+}
+
+func (s *rancomLocator) removeLocationsForLength(startLoc directedLocation, seqLen int) {
+
+	toRemove := make([]directedLocation, seqLen)
+
+	location := startLoc
+	var colAdj int
+	var rowAdj int
+
+	// Find endRow
+	if location.direction&GoesDownward > 0 {
+		rowAdj = 1
+	} else if location.direction&GoesUpward > 0 {
+		rowAdj = -1
+	} // else horizontal
+
+	// Find endCol
+	if location.direction&GoesLTR != 0 {
+		colAdj = 1
+	} else if location.direction&GoesRTL != 0 {
+		colAdj = -1
+	} // else vertical
+
+	col := location.col
+	row := location.row
+	for i := 0; i < wordInfo.seqLen; i++ {
+		toRemove = append(toRemove, directedLocation{
+			col: col,
+			row: row,
+		})
+
+		col += colAdj
+		row += rowAdj
+	}
+
+	newLocations := make([]directedLocation, 0, len(s.availableLocations))
+locs:
+	for _, loc := range newLocations {
+		for _, toRem := range toRemove {
+			if loc.col == toRem.col && loc.row == toRem.row {
+				// ignore it
+				continue locs
+			} else {
+				newLocations = append(newLocations, loc)
+			}
+		}
+	}
+	s.availableLocations = newLocations
+
+}
+*/
+
 func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
 	newLocations := make([]directedLocation, len(s.availableLocations))
 	copy(newLocations, s.availableLocations)
@@ -56,112 +146,9 @@ func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
 
 // Create all the directedLocations that fit within the possible directions
 // the caller set.
-func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Direction, rng *rand.Rand) {
+func (s *randomLocator) initialize(dlmatrix *directedLocationMatrix, rng *rand.Rand) {
 
-	// The cells inside (non-border) of the grid can go in all directions
-	// Initialize those first
-	possibleDirectionsSlice := DirectionSlice(possibleDirections)
-
-	// We over-allocate capacity a bit, as the corners and edges don't need as many
-	// directions, but that's ok
-	s.availableLocations = make([]directedLocation, 0, numCols*numRows*len(possibleDirectionsSlice))
-	for col := 1; col < numCols-1; col++ {
-		for row := 1; row < numRows-1; row++ {
-			for _, direction := range possibleDirectionsSlice {
-				d := directedLocation{
-					col:       col,
-					row:       row,
-					direction: direction,
-				}
-				s.availableLocations = append(s.availableLocations, d)
-				//				fmt.Printf("setIn %d,%d %s\n", col, row, DirectionString(direction))
-			}
-		}
-	}
-
-	// Make masks to mask down certain directions
-	goingUpMask := ^(Up | LTRAscending | RTLAscending)
-	goingRightMask := ^(LTRHorizontal | LTRAscending | LTRDescending)
-	goingLeftMask := ^(RTLHorizontal | RTLAscending | RTLDescending)
-	goingDownMask := ^(Down | LTRDescending | RTLDescending)
-
-	// Top row; cannot ascend or go up
-	topRowDirections := possibleDirections & goingUpMask
-	topRowDirectionsSlice := DirectionSlice(topRowDirections)
-	for col := 0; col < numCols; col++ {
-		var directionsSlice []Direction
-		// Corners have more restrictions
-		if col == 0 {
-			directionsSlice = DirectionSlice(topRowDirections & goingLeftMask)
-		} else if col == numCols-1 {
-			directionsSlice = DirectionSlice(topRowDirections & goingRightMask)
-		} else {
-			directionsSlice = topRowDirectionsSlice
-		}
-		for _, direction := range directionsSlice {
-			d := directedLocation{
-				col:       col,
-				row:       0,
-				direction: direction,
-			}
-			s.availableLocations = append(s.availableLocations, d)
-			//			fmt.Printf("setTr %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
-		}
-	}
-
-	// Bottomm row; cannot descend or go down
-	bottomRowDirections := possibleDirections & goingDownMask
-	bottomRowDirectionsSlice := DirectionSlice(bottomRowDirections)
-	for col := 0; col < numCols; col++ {
-		var directionsSlice []Direction
-		// Corners have more restrictions
-		if col == 0 {
-			directionsSlice = DirectionSlice(bottomRowDirections & goingLeftMask)
-		} else if col == numCols-1 {
-			directionsSlice = DirectionSlice(bottomRowDirections & goingRightMask)
-		} else {
-			directionsSlice = bottomRowDirectionsSlice
-		}
-		for _, direction := range directionsSlice {
-			d := directedLocation{
-				col:       col,
-				row:       numRows - 1,
-				direction: direction,
-			}
-			s.availableLocations = append(s.availableLocations, d)
-			//			fmt.Printf("setBr %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
-		}
-	}
-
-	// Left column; cannot go left. We already did the top and bottom
-	// corners, so we can skip them
-	leftColDirectionsSlice := DirectionSlice(possibleDirections & goingLeftMask)
-	for row := 1; row < numRows-1; row++ {
-		for _, direction := range leftColDirectionsSlice {
-			d := directedLocation{
-				col:       0,
-				row:       row,
-				direction: direction,
-			}
-			s.availableLocations = append(s.availableLocations, d)
-			//			fmt.Printf("setLc %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
-		}
-	}
-
-	// Right column; cannot go right. We already did the top and bottom
-	// corners, so we can skip them
-	rightColDirectionsSlice := DirectionSlice(possibleDirections & goingRightMask)
-	for row := 1; row < numRows-1; row++ {
-		for _, direction := range rightColDirectionsSlice {
-			d := directedLocation{
-				col:       numCols - 1,
-				row:       row,
-				direction: direction,
-			}
-			s.availableLocations = append(s.availableLocations, d)
-			//			fmt.Printf("setRc %d,%d %s\n", d.col, d.row, DirectionString(d.direction))
-		}
-	}
+	s.availableLocations = dlmatrix.getAllDirectedLocations()
 
 	// Shuffle
 	rng.Shuffle(len(s.availableLocations), func(i, j int) {

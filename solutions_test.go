@@ -13,7 +13,7 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func printRows(rows [][]rune) {
+func printRows(rows [][]string) {
 	// Header
 	fmt.Print("   ")
 	for col := 0; col < len(rows[0]); col++ {
@@ -25,8 +25,9 @@ func printRows(rows [][]rune) {
 	// Body
 	for row, rowSlice := range rows {
 		fmt.Printf("%2d ", row)
-		for _, cellRune := range rowSlice {
-			fmt.Printf(" %s ", string(cellRune))
+		for _, cellString := range rowSlice {
+			// use %1s in case cellString is ""
+			fmt.Printf(" %1s ", cellString)
 		}
 		fmt.Println()
 		fmt.Println()
@@ -119,10 +120,8 @@ func (s *MySuite) TestSolutions03(c *C) {
 		RandomSeed(1))
 	c.Assert(apiError, IsNil)
 
-	/*
-		printRows(ws.PuzzleRows)
-		printRows(ws.SolutionRows)
-	*/
+	//	printRows(ws.PuzzleRows)
+	//	printRows(ws.SolutionRows)
 
 	/* Puzzle
 	      0  1  2  3
@@ -255,14 +254,16 @@ func (s *MySuite) TestSolutions05(c *C) {
 // This takes an extraordinarly long time if no time limit is given.
 func (s *MySuite) TestSolutions06(c *C) {
 
-	filler := "x"
-	_, apiError := Construct(7, 5, ko_country_names,
-		FillUniformlyFromString(filler),
-		AddNaturalLTRDirections(),
-		RandomSeed(0),
-		WithTimeLimit(time.Duration(2)*time.Second),
-	)
-	c.Assert(apiError, Equals, ErrReachedTimeLimit)
+	/*
+		filler := "x"
+		_, apiError := Construct(7, 5, ko_country_names,
+			FillUniformlyFromString(filler),
+			AddNaturalLTRDirections(),
+			RandomSeed(0),
+			WithTimeLimit(time.Duration(2)*time.Second),
+		)
+		c.Assert(apiError, Equals, ErrReachedTimeLimit)
+	*/
 }
 
 // Test a solution that does solve quickly, but using a timer

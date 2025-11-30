@@ -6,6 +6,7 @@
 package wosecon
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"sort"
@@ -28,6 +29,7 @@ type wordSearchConstructor struct {
 	mode               algoMode
 	locator            randomLocator
 	cellMatrix         cellMatrix
+	dlmatrix           directedLocationMatrix
 
 	randomSeed      int64
 	randomSeedGiven bool
@@ -100,6 +102,8 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 		s.rng = rand.New(rand.NewSource(rand.Int63()))
 	}
 
+	s.dlmatrix.initialize(s.numCols, s.numRows, s.possibleDirections)
+
 	// Stable sort words, longest to shortest
 	// If the same length, then in alphabetical order
 	// It should be easiest to fit the longest words first.
@@ -120,7 +124,7 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 // The main loop of the algorithm
 func (s *wordSearchConstructor) construct() error {
 
-	s.locator.initialize(s.numCols, s.numRows, s.possibleDirections, s.rng)
+	s.locator.initialize(&s.dlmatrix, s.rng)
 
 	s.mode = forwardMode
 	currentWordIndex := 0
@@ -135,6 +139,7 @@ func (s *wordSearchConstructor) construct() error {
 	}
 
 	for {
+		fmt.Printf("currentWordIndex=%d\n", currentWordIndex)
 		// Reached our time limit?
 		if hasTimeLimit {
 			select {
@@ -146,7 +151,7 @@ func (s *wordSearchConstructor) construct() error {
 		}
 
 		if s.locateOne(currentWord) {
-			//			s.cellMatrix.show(s.numCols)
+			//s.cellMatrix.show(s.numCols)
 			if currentWordIndex == len(s.wordInfos)-1 {
 				// Finished
 				break
@@ -155,6 +160,8 @@ func (s *wordSearchConstructor) construct() error {
 			currentWord = s.wordInfos[currentWordIndex]
 			s.mode = forwardMode
 		} else {
+			//			fmt.Printf("Need to backtrack, currentWordIndex=%d\n", currentWordIndex)
+			s.cellMatrix.show(s.numCols)
 			// Couldn't place a word. Go backwards
 			if currentWordIndex == 0 {
 				return ErrCannotFitWords
@@ -180,6 +187,7 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	if s.mode == backwardMode {
 		dl := currentWord.getPlacement()
 		s.locator.add(dl)
+		//s.locator.addLocationsForLength(dl, currentWord.seqLen, s.possibleDirections)
 		currentWord.moveLocationToTested()
 		localLocator = s.locator.minus(currentWord.getTested())
 	} else {
@@ -188,12 +196,18 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 
 	for locationIndex := 0; locationIndex < localLocator.size(); locationIndex++ {
 		suitableLocation := localLocator.get(locationIndex)
+		/*
+			if s.mode == backwardMode {
+				fmt.Printf("trying loc %d = %v\n", locationIndex, suitableLocation)
+			}
+		*/
 		if s.validPlacement(currentWord, suitableLocation) {
 			if localLocator == &s.locator {
 				s.locator.removeN(locationIndex)
 			} else {
 				s.locator.remove(suitableLocation)
 			}
+			//s.locator.removeLocationsForLength(suitableLocation, currentWord.seqLen)
 			return true
 		}
 	}
