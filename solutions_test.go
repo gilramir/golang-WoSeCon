@@ -214,7 +214,7 @@ func (s *MySuite) TestSolutions04(c *C) {
 	ws := WordSearch{
 		NumCols: 8,
 		NumRows: 8,
-		// This is in solutions2_test.go; don't edit that with
+		// This is in ko_test.go; don't edit that with
 		// vim; the vim-go plugin will destroy it.
 		Sequences:                 skeys2Sequences(yesul_word_placements),
 		SolutionRows:              rmatrix2smatrix(yesul_solution),
@@ -252,18 +252,22 @@ func (s *MySuite) TestSolutions05(c *C) {
 }
 
 // This takes an extraordinarly long time if no time limit is given.
+// re-impl; at 600s, crash; ut framework itself has a 10min timeout!
+// but the routine is faster
 func (s *MySuite) TestSolutions06(c *C) {
 
-	/*
-		filler := "x"
-		_, apiError := Construct(7, 5, ko_country_names,
-			FillUniformlyFromString(filler),
-			AddNaturalLTRDirections(),
-			RandomSeed(0),
-			WithTimeLimit(time.Duration(2)*time.Second),
-		)
-		c.Assert(apiError, Equals, ErrReachedTimeLimit)
-	*/
+	filler := "x"
+	_, apiError := Construct(7, 5, ko_country_names,
+		//	_, apiError := Construct(4, 8, ko_country_names,
+		//_, apiError := Construct(4, 9, ko_country_names,
+		// good
+		//	_, apiError := Construct(4, 10, ko_country_names,
+		FillUniformlyFromString(filler),
+		AddNaturalLTRDirections(),
+		RandomSeed(0),
+		WithTimeLimit(time.Duration(2)*time.Second),
+	)
+	c.Assert(apiError, Equals, ErrReachedTimeLimit)
 }
 
 // Test a solution that does solve quickly, but using a timer

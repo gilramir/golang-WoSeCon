@@ -30,6 +30,10 @@ type directedLocationMatrix struct {
 	numDirectedLocations int
 }
 
+func (s *directedLocationMatrix) getDirectionsAt(col int, row int) []directedLocation {
+	return s.dlmatrix[col][row]
+}
+
 func (s *directedLocationMatrix) initialize(numCols int, numRows int, possibleDirections Direction) {
 	s.numCols = numCols
 	s.numRows = numRows

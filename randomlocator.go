@@ -23,6 +23,7 @@ func (s *randomLocator) get(n int) directedLocation {
 	return s.availableLocations[n]
 }
 
+/*
 func (s *randomLocator) add(d directedLocation) {
 	s.availableLocations = append(s.availableLocations, d)
 }
@@ -42,8 +43,20 @@ func (s *randomLocator) removeN(index int) {
 	s.availableLocations = append(s.availableLocations[:index], s.availableLocations[index+1:]...)
 }
 
-/*
-func (s *rancomLocator) addLocationsForLength(startLoc directedLocation, seqLen int, possibleDirections Direction) {
+func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
+	newLocations := make([]directedLocation, len(s.availableLocations))
+	copy(newLocations, s.availableLocations)
+	newLocator := &randomLocator{
+		availableLocations: newLocations,
+	}
+	for _, target := range targets {
+		newLocator.remove(target)
+	}
+	return newLocator
+}
+*/
+
+func (s *randomLocator) addLocationForLength(startLoc directedLocation, seqLen int, dlmatrix *directedLocationMatrix) {
 
 	location := startLoc
 	var colAdj int
@@ -63,25 +76,19 @@ func (s *rancomLocator) addLocationsForLength(startLoc directedLocation, seqLen 
 		colAdj = -1
 	} // else vertical
 
-	dlcons = DirectedLocationConstructor{
-		numRows:            numRows,
-		numCols:            numCols,
-		possibleDirections: possibleDirections,
-	}
-
 	col := location.col
 	row := location.row
-	for i := 0; i < wordInfo.seqLen; i++ {
-		newDirectedLocations = dlcons.constructPossibleDirectedLocations(col, row)
+	for i := 0; i < seqLen; i++ {
+		possibleDirections := dlmatrix.getDirectionsAt(col, row)
 
-		s.availableLocations = append(s.availableLocations, newDirectedLocations)
+		s.availableLocations = append(s.availableLocations, possibleDirections...)
 
 		col += colAdj
 		row += rowAdj
 	}
 }
 
-func (s *rancomLocator) removeLocationsForLength(startLoc directedLocation, seqLen int) {
+func (s *randomLocator) removeLocationForLength(startLoc directedLocation, seqLen int) {
 
 	toRemove := make([]directedLocation, seqLen)
 
@@ -105,41 +112,44 @@ func (s *rancomLocator) removeLocationsForLength(startLoc directedLocation, seqL
 
 	col := location.col
 	row := location.row
-	for i := 0; i < wordInfo.seqLen; i++ {
+	for i := 0; i < seqLen; i++ {
 		toRemove = append(toRemove, directedLocation{
 			col: col,
 			row: row,
+			// Don't worry about the Direction
 		})
 
 		col += colAdj
 		row += rowAdj
 	}
 
-	newLocations := make([]directedLocation, 0, len(s.availableLocations))
+	//	fmt.Printf("have %d to remove, need to scan %d available locations\n",
+	//		len(toRemove), len(s.availableLocations))
+	preservedLocations := make([]directedLocation, 0, len(s.availableLocations))
 locs:
-	for _, loc := range newLocations {
+	for _, loc := range s.availableLocations {
 		for _, toRem := range toRemove {
+			// Compare col and row, but not Direction
 			if loc.col == toRem.col && loc.row == toRem.row {
-				// ignore it
+				// throw it away
 				continue locs
-			} else {
-				newLocations = append(newLocations, loc)
 			}
 		}
+		// save it
+		preservedLocations = append(preservedLocations, loc)
 	}
-	s.availableLocations = newLocations
+	s.availableLocations = preservedLocations
 
 }
-*/
 
-func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
+func (s *randomLocator) minusForLength(targets []directedLocation, seqLen int) *randomLocator {
 	newLocations := make([]directedLocation, len(s.availableLocations))
 	copy(newLocations, s.availableLocations)
 	newLocator := &randomLocator{
 		availableLocations: newLocations,
 	}
 	for _, target := range targets {
-		newLocator.remove(target)
+		newLocator.removeLocationForLength(target, seqLen)
 	}
 	return newLocator
 }
@@ -154,6 +164,7 @@ func (s *randomLocator) initialize(dlmatrix *directedLocationMatrix, rng *rand.R
 	rng.Shuffle(len(s.availableLocations), func(i, j int) {
 		s.availableLocations[i], s.availableLocations[j] = s.availableLocations[j], s.availableLocations[i]
 	})
+	fmt.Printf("locator init: %d directedlocations\n", len(s.availableLocations))
 
 	/*
 		for i, d := range s.availableLocations {

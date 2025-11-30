@@ -6,7 +6,6 @@
 package wosecon
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"sort"
@@ -139,7 +138,7 @@ func (s *wordSearchConstructor) construct() error {
 	}
 
 	for {
-		fmt.Printf("currentWordIndex=%d\n", currentWordIndex)
+		//		fmt.Printf("currentWordIndex=%d\n", currentWordIndex)
 		// Reached our time limit?
 		if hasTimeLimit {
 			select {
@@ -161,7 +160,7 @@ func (s *wordSearchConstructor) construct() error {
 			s.mode = forwardMode
 		} else {
 			//			fmt.Printf("Need to backtrack, currentWordIndex=%d\n", currentWordIndex)
-			s.cellMatrix.show(s.numCols)
+			//			s.cellMatrix.show(s.numCols)
 			// Couldn't place a word. Go backwards
 			if currentWordIndex == 0 {
 				return ErrCannotFitWords
@@ -186,28 +185,35 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 
 	if s.mode == backwardMode {
 		dl := currentWord.getPlacement()
-		s.locator.add(dl)
-		//s.locator.addLocationsForLength(dl, currentWord.seqLen, s.possibleDirections)
+		//s.locator.add(dl)
+		s.locator.addLocationForLength(dl, currentWord.seqLen, &s.dlmatrix)
 		currentWord.moveLocationToTested()
-		localLocator = s.locator.minus(currentWord.getTested())
+		//localLocator = s.locator.minus(currentWord.getTested())
+		localLocator = s.locator.minusForLength(currentWord.getTested(), currentWord.seqLen)
 	} else {
 		localLocator = &s.locator
 	}
 
+	/*
+		if s.mode == backwardMode {
+			fmt.Printf("trying %d suitableLocations\n", localLocator.size())
+		}
+	*/
 	for locationIndex := 0; locationIndex < localLocator.size(); locationIndex++ {
 		suitableLocation := localLocator.get(locationIndex)
-		/*
-			if s.mode == backwardMode {
-				fmt.Printf("trying loc %d = %v\n", locationIndex, suitableLocation)
-			}
-		*/
 		if s.validPlacement(currentWord, suitableLocation) {
-			if localLocator == &s.locator {
-				s.locator.removeN(locationIndex)
-			} else {
-				s.locator.remove(suitableLocation)
-			}
-			//s.locator.removeLocationsForLength(suitableLocation, currentWord.seqLen)
+			/*
+				if localLocator == &s.locator {
+					s.locator.removeN(locationIndex)
+				} else {
+					s.locator.remove(suitableLocation)
+				}
+			*/
+			//			t0 := time.Now()
+			//			fmt.Printf("removing %v at %d len\n", suitableLocation, currentWord.seqLen)
+			s.locator.removeLocationForLength(suitableLocation, currentWord.seqLen)
+			//			duration := time.Now().Sub(t0)
+			//			fmt.Printf("done removing in %s\n", duration)
 			return true
 		}
 	}
