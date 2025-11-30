@@ -139,13 +139,13 @@ The options are:
 * **FillUniformlyFromString(filler string)** - fill in the puzzle
     with equally-random choices of runes from this string.
 
-* **FillUniformlyFromStringSlice(filler []string)** - fill in the puzzble
+* **FillUniformlyFromStringSlice(filler []string)** - fill in the puzzle
     with equally-random choices of strings from this slice.
 
-* **FillUniformlyFromRuneSlice(filler []rune)** - fill in the puzzble
+* **FillUniformlyFromRuneSlice(filler []rune)** - fill in the puzzle
     with equally-random choices of runes from this slice.
 
-* **FillWeighted(filler []FillerWeight)** - fill in the puzzble
+* **FillWeighted(filler []FillerWeight)** - fill in the puzzle
     based on weighted values. Give a slice of RuneWeight objects,
     which are just a rune and its relative weight. The weights do not
     need to sum up to some specific value. The code will sum the
