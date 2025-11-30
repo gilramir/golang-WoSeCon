@@ -54,109 +54,12 @@ func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
 	return newLocator
 }
 
-/*
-func (s *randomLocator) addLocationForLength(startLoc directedLocation, seqLen int, dlmatrix *directedLocationMatrix) {
-
-	location := startLoc
-	var colAdj int
-	var rowAdj int
-
-	// Find endRow
-	if location.direction&GoesDownward > 0 {
-		rowAdj = 1
-	} else if location.direction&GoesUpward > 0 {
-		rowAdj = -1
-	} // else horizontal
-
-	// Find endCol
-	if location.direction&GoesLTR != 0 {
-		colAdj = 1
-	} else if location.direction&GoesRTL != 0 {
-		colAdj = -1
-	} // else vertical
-
-	col := location.col
-	row := location.row
-	for i := 0; i < seqLen; i++ {
-		possibleDirections := dlmatrix.getDirectionsAt(col, row)
-
-		s.availableLocations = append(s.availableLocations, possibleDirections...)
-
-		col += colAdj
-		row += rowAdj
-	}
-}
-
-func (s *randomLocator) removeLocationForLength(startLoc directedLocation, seqLen int) {
-
-	toRemove := make([]directedLocation, seqLen)
-
-	location := startLoc
-	var colAdj int
-	var rowAdj int
-
-	// Find endRow
-	if location.direction&GoesDownward > 0 {
-		rowAdj = 1
-	} else if location.direction&GoesUpward > 0 {
-		rowAdj = -1
-	} // else horizontal
-
-	// Find endCol
-	if location.direction&GoesLTR != 0 {
-		colAdj = 1
-	} else if location.direction&GoesRTL != 0 {
-		colAdj = -1
-	} // else vertical
-
-	col := location.col
-	row := location.row
-	for i := 0; i < seqLen; i++ {
-		toRemove = append(toRemove, directedLocation{
-			col: col,
-			row: row,
-			// Don't worry about the Direction
-		})
-
-		col += colAdj
-		row += rowAdj
-	}
-
-	//	fmt.Printf("have %d to remove, need to scan %d available locations\n",
-	//		len(toRemove), len(s.availableLocations))
-	preservedLocations := make([]directedLocation, 0, len(s.availableLocations))
-locs:
-	for _, loc := range s.availableLocations {
-		for _, toRem := range toRemove {
-			// Compare col and row, but not Direction
-			if loc.col == toRem.col && loc.row == toRem.row {
-				// throw it away
-				continue locs
-			}
-		}
-		// save it
-		preservedLocations = append(preservedLocations, loc)
-	}
-	s.availableLocations = preservedLocations
-
-}
-
-func (s *randomLocator) minusForLength(targets []directedLocation, seqLen int) *randomLocator {
-	newLocations := make([]directedLocation, len(s.availableLocations))
-	copy(newLocations, s.availableLocations)
-	newLocator := &randomLocator{
-		availableLocations: newLocations,
-	}
-	for _, target := range targets {
-		newLocator.removeLocationForLength(target, seqLen)
-	}
-	return newLocator
-}
-*/
-
 // Create all the directedLocations that fit within the possible directions
 // the caller set.
-func (s *randomLocator) initialize(dlmatrix *directedLocationMatrix, rng *rand.Rand) {
+func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Direction, rng *rand.Rand) {
+
+	var dlmatrix directedLocationMatrix
+	dlmatrix.initialize(numCols, numRows, possibleDirections)
 
 	s.availableLocations = dlmatrix.getAllDirectedLocations()
 

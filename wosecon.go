@@ -28,7 +28,6 @@ type wordSearchConstructor struct {
 	mode               algoMode
 	locator            randomLocator
 	solutionMatrix     solutionMatrix
-	dlmatrix           directedLocationMatrix
 
 	randomSeed      int64
 	randomSeedGiven bool
@@ -101,8 +100,6 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 		s.rng = rand.New(rand.NewSource(rand.Int63()))
 	}
 
-	s.dlmatrix.initialize(s.numCols, s.numRows, s.possibleDirections)
-
 	// Stable sort words, longest to shortest
 	// If the same length, then in alphabetical order
 	// It should be easiest to fit the longest words first.
@@ -123,7 +120,7 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 // The main loop of the algorithm
 func (s *wordSearchConstructor) construct() error {
 
-	s.locator.initialize(&s.dlmatrix, s.rng)
+	s.locator.initialize(s.numCols, s.numRows, s.possibleDirections, s.rng)
 
 	s.mode = forwardMode
 	currentWordIndex := 0
@@ -184,7 +181,6 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	if s.mode == backwardMode {
 		dl := currentWord.getPlacement()
 		s.locator.add(dl)
-		//s.locator.addLocationForLength(dl, currentWord.seqLen, &s.dlmatrix)
 		currentWord.moveLocationToTested()
 		localLocator = s.locator.minus(currentWord.getTested())
 		//localLocator = s.locator.minusForLength(currentWord.getTested(), currentWord.seqLen)
