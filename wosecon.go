@@ -20,10 +20,17 @@ const (
 	backwardMode algoMode = 'b'
 )
 
-// Default cap on the number of memoized dead-end states. Each entry is
-// roughly 150-250 bytes (fingerprint string + Go map overhead), so the
-// default keeps the cache around 2 MB. Tune with WithMemoizationLimit.
-const defaultDeadEndCacheCap = 10000
+// Default cap on the number of memoized dead-end states. The default is
+// 0 (cache disabled) because the cache only pays off when the same cell
+// state can be reached by more than one sequence of placements — the
+// canonical case is a palindromic word in a bidirectional grid, where
+// "LEVEL" placed LTR at (0,r) lands the same letters in the same cells
+// as "LEVEL" placed RTL at (4,r). For typical word lists (no palindromes,
+// no reverse-pairs in a bidirectional grid) the cache rarely hits and
+// the per-call fingerprint cost slows the search down. Opt in via
+// WithMemoizationLimit when the word list is known to benefit. Each
+// entry is roughly 150-250 bytes.
+const defaultDeadEndCacheCap = 0
 
 type wordSearchConstructor struct {
 	numCols            int

@@ -168,17 +168,54 @@ The options are:
     a maximum time that the algorithm will run. If the time limit is reached,
     ErrReachedTimeLimit is returned.
 
-* **WithMemoizationLimit(maxEntries int)** - the Constructor caches the
-    cell states it has already proven to be dead ends, so the same dead
-    end is not re-derived through a different backtrack path. The cache
-    is capped to bound memory; this option sets the cap.
+* **WithMemoizationLimit(maxEntries int)** - the Constructor can cache
+    the cell states it has already proven to be dead ends, so the same
+    dead end is not re-derived through a different backtrack path. The
+    cache is **off by default** (`maxEntries == 0`) because it only
+    helps in a narrow set of inputs; for most word lists, the per-call
+    fingerprinting cost outweighs the savings, so enabling it makes the
+    construction *slower*, not faster.
 
-    Each cached entry holds a fingerprint of the puzzle grid (one cell
-    string per cell, NUL-separated) plus a small amount of Go map
-    overhead. As a rough rule of thumb, expect about
+    Turn the cache on when your word list can produce the same grid of
+    letters via more than one combination of word placements. The two
+    common cases are:
+
+    1. **A palindromic word in a bidirectional grid.** "LEVEL" placed
+        `LTRHorizontal` at `(col=0, row=r)` lands the letters
+        `L, E, V, E, L` in cells `(0,r)..(4,r)`. The same word placed
+        `RTLHorizontal` at `(col=4, row=r)` lands the same letters in
+        the same cells. The algorithm sees two distinct placements
+        that produce identical grids; the cache lets the search skip
+        the second subtree once the first is explored.
+
+        English examples: `RACECAR`, `RADAR`, `LEVEL`, `NOON`,
+        `KAYAK`, `MADAM`, `REFER`, `CIVIC`. Only relevant when you
+        enable a direction *and* its reverse (e.g. both
+        `LTRHorizontal` and `RTLHorizontal`, or both `Down` and
+        `Up`). A puzzle that uses only the natural LTR directions
+        won't see this.
+
+    2. **A pair of words that are reverses of each other in a
+        bidirectional grid.** If the word list contains both `STAR`
+        and `RATS` and the grid allows both LTR and RTL movement,
+        placing `STAR` LTR at `(0,r)` and placing `RATS` RTL at
+        `(3,r)` produce the same letters in the same cells via two
+        different placement choices.
+
+        Pairs to watch for: `STAR`/`RATS`, `STOP`/`POTS`,
+        `LIVE`/`EVIL`, `GOD`/`DOG`, `DESSERTS`/`STRESSED`.
+
+    For *typical* puzzles — no palindromes, no word that is another
+    word spelled backwards, or a uni-directional grid — leave this at
+    `0`. Concretely, the dense Korean puzzle in `cmd/mkwordsearch`
+    runs roughly 2× faster with the cache off than with it on.
+
+    When you do enable it, each cached entry holds a fingerprint of
+    the puzzle grid (one cell string per cell, NUL-separated) plus
+    Go map overhead. As a rough rule, expect about
     `(numCols * numRows * bytesPerCellString) + 150` bytes per entry,
-    where `bytesPerCellString` is 1 for ASCII single-rune cells and 3
-    for typical Korean/CJK cells. Some sample sizings:
+    where `bytesPerCellString` is 1 for ASCII single-rune cells and
+    3 for typical Korean/CJK cells. Some sample sizings:
 
     | Grid    | ASCII cells (~2 B) | Korean cells (~4 B) |
     |---------|--------------------|----------------------|
@@ -186,13 +223,11 @@ The options are:
     | 15 × 15 | ~600 B/entry       | ~1.05 KB/entry       |
     | 25 × 25 | ~1.4 KB/entry      | ~2.65 KB/entry       |
 
-    Multiply by the cap to get the upper-bound memory cost.
-    The default is **10,000 entries** (≈2 MB on a small Korean grid,
-    ≈14 MB on a 25×25 Korean grid). Pass `0` to disable the cache
-    entirely; word lists with no palindromic / placement-equivalent
-    entries rarely benefit from the cache and may prefer to disable
-    it. Once the cap is hit, additional dead ends are not recorded,
-    but existing entries continue to short-circuit lookups.
+    Multiply by `maxEntries` to bound memory. A reasonable starting
+    point for an English puzzle with several palindromes is
+    `WithMemoizationLimit(10000)` (≈2 MB). Once the cap is reached,
+    further dead ends stop being recorded but existing entries still
+    short-circuit lookups.
 
 ## Errors
 
