@@ -1,6 +1,9 @@
 package wosecon
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type solutionMatrix struct {
 	numCols int
@@ -69,6 +72,23 @@ func (s *solutionMatrix) setCellAvailable(col, row int) {
 	if cell.count == 0 {
 		cell.seqString = ""
 	}
+}
+
+// fingerprint returns a row-major encoding of cell contents suitable for
+// use as a map key. Cells are NUL-separated so adjacent empty/non-empty
+// arrangements stay distinguishable. Refcounts are deliberately ignored:
+// they affect how a cell is built up and torn down, but not whether a
+// future word can place a character there.
+func (s *solutionMatrix) fingerprint() string {
+	var sb strings.Builder
+	sb.Grow(s.numCols * s.numRows * 2)
+	for row := 0; row < s.numRows; row++ {
+		for col := 0; col < s.numCols; col++ {
+			sb.WriteString(s.matrix[col][row].seqString)
+			sb.WriteByte(0)
+		}
+	}
+	return sb.String()
 }
 
 func (s *solutionMatrix) dump() {

@@ -44,6 +44,20 @@ type wordSearchConstructor struct {
 
 	// Optional time limit
 	timeLimit time.Duration
+
+	// Memoized dead-end states. Key is (cell-state fingerprint, current
+	// word index): a state from which no completion of the remaining
+	// words is possible. Sound for word lists with no palindromic /
+	// otherwise placement-equivalent entries — when two paths reach the
+	// same cell state at the same word index, they have the same
+	// available locator positions and hence the same set of reachable
+	// completions.
+	deadEnds map[deadEndKey]bool
+}
+
+type deadEndKey struct {
+	fingerprint string
+	wordIndex   int
 }
 
 func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Sequence, opts ...WordSearchOption) error {
@@ -51,6 +65,7 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 	s.numCols = numCols
 	s.numRows = numRows
 	s.solutionMatrix.initialize(numCols, numRows)
+	s.deadEnds = make(map[deadEndKey]bool)
 
 	// Use the list of words (strings) from the user
 	// to create our wordInfo objects, but unique-ify the word lsit
@@ -147,7 +162,7 @@ func (s *wordSearchConstructor) construct() error {
 			}
 		}
 
-		if s.locateOne(currentWord, currentWordIndex) {
+		if s.tryPlace(currentWord, currentWordIndex) {
 			if currentWordIndex == len(s.wordInfos)-1 {
 				// Finished
 				break
@@ -170,6 +185,24 @@ func (s *wordSearchConstructor) construct() error {
 		}
 	}
 	return nil
+}
+
+// tryPlace wraps locateOne with the dead-end memoization. The cell-state
+// fingerprint at this point reflects words 0..currentWordIndex-1 placed and
+// the current word not yet placed (in backward mode, clearPlacement on the
+// previous iteration restored this state before we returned to the loop
+// top). If a prior locateOne already proved this (state, index) yields no
+// completion, return immediately; otherwise record the failure for later.
+func (s *wordSearchConstructor) tryPlace(currentWord *wordInfo, currentWordIndex int) bool {
+	key := deadEndKey{s.solutionMatrix.fingerprint(), currentWordIndex}
+	if s.deadEnds[key] {
+		return false
+	}
+	if s.locateOne(currentWord, currentWordIndex) {
+		return true
+	}
+	s.deadEnds[key] = true
+	return false
 }
 
 // Place one word into the puzzle. If it cannot, returns false.
