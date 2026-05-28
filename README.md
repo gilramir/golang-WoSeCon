@@ -229,6 +229,80 @@ The options are:
     further dead ends stop being recorded but existing entries still
     short-circuit lookups.
 
+## Density and search time
+
+The WoSeCon algorithm is exhaustive backtracking — it walks the tree of
+possible word placements with no global view of which subtrees can ever
+lead to a valid puzzle. For grids that have plenty of room this is
+fine, but as the puzzle gets denser the time to find (or rule out) a
+solution grows sharply.
+
+The useful single number is the **letter density**: total letters in
+the word list divided by grid cells. Densities above 100% mean a valid
+puzzle is only possible if words share cells.
+
+Three regimes show up in practice:
+
+1. **Below ~100% density.** Solutions are abundant; the first valid
+   placement usually leads straight to a complete puzzle, and
+   `Construct` finishes in milliseconds.
+
+2. **Slightly above 100% (roughly 110%–130%).** Solutions *may*
+   exist but require overlap. This is the slow regime. Many partial
+   placements look fine but turn out to be dead ends only after the
+   algorithm has explored a long subtree. Different random seeds at
+   the same grid size can swing the runtime from milliseconds to
+   "longer than you want to wait."
+
+3. **Well above ~130%.** The constraints are usually tight enough
+   that early placements force a contradiction quickly, the
+   algorithm exhausts the space, and `Construct` returns
+   `ErrCannotFitWords` in negligible time. (Whether a solution
+   *actually* exists at these densities depends on how much the
+   words share letters; for many word lists, they do not share
+   enough.)
+
+The `cmd/densityprobe` program in this repository measures all three
+regimes against a fixed list of 12 short English words (56 letters
+total, no palindromes, no reverse-pairs), sweeping grid size to vary
+density. Three random seeds per grid, 15-second per-run cap:
+
+| Grid  | Cells | Letter density | seed=0 | seed=1 | seed=2 |
+|-------|------:|---------------:|--------|--------|--------|
+| 12×10 |   120 |  47%           | <1 ms  | <1 ms  | <1 ms  |
+| 10× 8 |    80 |  70%           | <1 ms  | <1 ms  | <1 ms  |
+|  9× 7 |    63 |  89%           | <1 ms  | <1 ms  | <1 ms  |
+|  8× 7 |    56 | 100%           | 3 ms   | <1 ms  | <1 ms  |
+|  7× 7 |    49 | 114%           | 569 ms | >15 s  | >15 s  |
+|  7× 6 |    42 | 133%           | no-fit | no-fit | no-fit |
+|  6× 6 |    36 | 156%           | no-fit | no-fit | no-fit |
+
+Note the cliff at 114%: one seed solves in half a second, two others
+fail to converge inside 15 seconds. That is regime 2 in action — the
+borderline case where solutions are possible but the search has to
+wander.
+
+**If your call is returning `ErrReachedTimeLimit`**, the puzzle is
+almost certainly in regime 2: a solution likely exists, but the
+algorithm cannot find it in the budget you allowed. The fix that
+actually works is to enlarge the grid by one or two rows or columns,
+which drops the density into regime 1 and usually solves in
+milliseconds. The longer-form workarounds (different random seeds,
+longer time limits, enabling more directions) help occasionally; a
+slightly bigger grid almost always does.
+
+To re-measure on your own machine — or after changes to the
+algorithm — build and run the probe:
+
+```
+go build -o densityprobe ./cmd/densityprobe
+./densityprobe
+```
+
+The word list, grid range, seeds, and per-run cap are hard-coded at
+the top of `cmd/densityprobe/main.go`; edit them to explore other
+shapes of the same question.
+
 ## Errors
 
 The **Constructor** functions will return only a handful of specific errors, provided
