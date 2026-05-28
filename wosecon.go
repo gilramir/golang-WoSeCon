@@ -20,6 +20,15 @@ const (
 	backwardMode algoMode = 'b'
 )
 
+// Cap on the number of memoized dead-end states. At ~200 bytes/entry
+// (fingerprint string + map overhead) this bounds the dead-end cache to
+// roughly 20 MB. Once the cap is reached, further failures stop being
+// recorded; existing entries keep serving lookups. The cache mainly pays
+// off when distinct backtrack paths reach the same cell state at the
+// same word index — for word lists with no placement-equivalent entries
+// that rarely happens, so an aggressive cap costs little in practice.
+const deadEndCacheCap = 100000
+
 type wordSearchConstructor struct {
 	numCols            int
 	numRows            int
@@ -201,7 +210,9 @@ func (s *wordSearchConstructor) tryPlace(currentWord *wordInfo, currentWordIndex
 	if s.locateOne(currentWord, currentWordIndex) {
 		return true
 	}
-	s.deadEnds[key] = true
+	if len(s.deadEnds) < deadEndCacheCap {
+		s.deadEnds[key] = true
+	}
 	return false
 }
 
