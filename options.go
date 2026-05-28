@@ -152,3 +152,18 @@ func WithTimeLimit(duration time.Duration) WordSearchOption {
 		return nil
 	}
 }
+
+// Set the maximum number of entries kept in the dead-end memoization
+// cache. The cache short-circuits the search when a (cell-state, word
+// index) pair is revisited; once the cap is reached, additional
+// failures stop being recorded but existing entries keep serving
+// lookups. Each entry takes roughly 150-250 bytes of memory depending
+// on grid dimensions and cell-content byte length, so the default of
+// 10,000 holds the cache around 2 MB. Pass 0 to disable memoization
+// entirely.
+func WithMemoizationLimit(maxEntries int) WordSearchOption {
+	return func(constructor *wordSearchConstructor) error {
+		constructor.deadEndCacheCap = maxEntries
+		return nil
+	}
+}

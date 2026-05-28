@@ -20,14 +20,10 @@ const (
 	backwardMode algoMode = 'b'
 )
 
-// Cap on the number of memoized dead-end states. At ~200 bytes/entry
-// (fingerprint string + map overhead) this bounds the dead-end cache to
-// roughly 20 MB. Once the cap is reached, further failures stop being
-// recorded; existing entries keep serving lookups. The cache mainly pays
-// off when distinct backtrack paths reach the same cell state at the
-// same word index — for word lists with no placement-equivalent entries
-// that rarely happens, so an aggressive cap costs little in practice.
-const deadEndCacheCap = 100000
+// Default cap on the number of memoized dead-end states. Each entry is
+// roughly 150-250 bytes (fingerprint string + Go map overhead), so the
+// default keeps the cache around 2 MB. Tune with WithMemoizationLimit.
+const defaultDeadEndCacheCap = 10000
 
 type wordSearchConstructor struct {
 	numCols            int
@@ -61,7 +57,8 @@ type wordSearchConstructor struct {
 	// same cell state at the same word index, they have the same
 	// available locator positions and hence the same set of reachable
 	// completions.
-	deadEnds map[deadEndKey]bool
+	deadEnds         map[deadEndKey]bool
+	deadEndCacheCap  int
 }
 
 type deadEndKey struct {
@@ -74,7 +71,7 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 	s.numCols = numCols
 	s.numRows = numRows
 	s.solutionMatrix.initialize(numCols, numRows)
-	s.deadEnds = make(map[deadEndKey]bool)
+	s.deadEndCacheCap = defaultDeadEndCacheCap
 
 	// Use the list of words (strings) from the user
 	// to create our wordInfo objects, but unique-ify the word lsit
@@ -95,6 +92,12 @@ func (s *wordSearchConstructor) init(numCols int, numRows int, sequences []Seque
 		if err != nil {
 			return err
 		}
+	}
+
+	// Allocate the memoization cache only if the caller didn't disable
+	// it via WithMemoizationLimit(0).
+	if s.deadEndCacheCap > 0 {
+		s.deadEnds = make(map[deadEndKey]bool)
 	}
 
 	// If no possibleDirections were given, use the default
@@ -203,6 +206,9 @@ func (s *wordSearchConstructor) construct() error {
 // top). If a prior locateOne already proved this (state, index) yields no
 // completion, return immediately; otherwise record the failure for later.
 func (s *wordSearchConstructor) tryPlace(currentWord *wordInfo, currentWordIndex int) bool {
+	if s.deadEnds == nil {
+		return s.locateOne(currentWord, currentWordIndex)
+	}
 	key := deadEndKey{s.solutionMatrix.fingerprint(), currentWordIndex}
 	if s.deadEnds[key] {
 		return false
@@ -210,7 +216,7 @@ func (s *wordSearchConstructor) tryPlace(currentWord *wordInfo, currentWordIndex
 	if s.locateOne(currentWord, currentWordIndex) {
 		return true
 	}
-	if len(s.deadEnds) < deadEndCacheCap {
+	if len(s.deadEnds) < s.deadEndCacheCap {
 		s.deadEnds[key] = true
 	}
 	return false

@@ -168,6 +168,32 @@ The options are:
     a maximum time that the algorithm will run. If the time limit is reached,
     ErrReachedTimeLimit is returned.
 
+* **WithMemoizationLimit(maxEntries int)** - the Constructor caches the
+    cell states it has already proven to be dead ends, so the same dead
+    end is not re-derived through a different backtrack path. The cache
+    is capped to bound memory; this option sets the cap.
+
+    Each cached entry holds a fingerprint of the puzzle grid (one cell
+    string per cell, NUL-separated) plus a small amount of Go map
+    overhead. As a rough rule of thumb, expect about
+    `(numCols * numRows * bytesPerCellString) + 150` bytes per entry,
+    where `bytesPerCellString` is 1 for ASCII single-rune cells and 3
+    for typical Korean/CJK cells. Some sample sizings:
+
+    | Grid    | ASCII cells (~2 B) | Korean cells (~4 B) |
+    |---------|--------------------|----------------------|
+    |  7 ×  5 | ~220 B/entry       | ~290 B/entry         |
+    | 15 × 15 | ~600 B/entry       | ~1.05 KB/entry       |
+    | 25 × 25 | ~1.4 KB/entry      | ~2.65 KB/entry       |
+
+    Multiply by the cap to get the upper-bound memory cost.
+    The default is **10,000 entries** (≈2 MB on a small Korean grid,
+    ≈14 MB on a 25×25 Korean grid). Pass `0` to disable the cache
+    entirely; word lists with no palindromic / placement-equivalent
+    entries rarely benefit from the cache and may prefer to disable
+    it. Once the cap is hit, additional dead ends are not recorded,
+    but existing entries continue to short-circuit lookups.
+
 ## Errors
 
 The **Constructor** functions will return only a handful of specific errors, provided
