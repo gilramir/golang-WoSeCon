@@ -13,6 +13,8 @@ import (
 type randomLocator struct {
 	// One directedLocation for every cell and possible direction
 	availableLocations []directedLocation
+	// Shared RNG, kept so that minus() can reshuffle on each call.
+	rng *rand.Rand
 }
 
 func (s *randomLocator) size() int {
@@ -47,16 +49,30 @@ func (s *randomLocator) minus(targets []directedLocation) *randomLocator {
 	copy(newLocations, s.availableLocations)
 	newLocator := &randomLocator{
 		availableLocations: newLocations,
+		rng:                s.rng,
 	}
 	for _, target := range targets {
 		newLocator.remove(target)
 	}
+	// Freshly shuffle so each backward-mode entry probes a different
+	// order. This matches the C++ reference's RandomLocator::minus(),
+	// which builds a fresh, freshly-shuffled RandomLocator on every
+	// call. The global locator's ordering becomes increasingly biased
+	// as items are added and removed during the search, so re-shuffling
+	// here injects randomness that helps the algorithm escape patterns
+	// where the same constrained locations keep being tried first.
+	s.rng.Shuffle(len(newLocator.availableLocations), func(i, j int) {
+		newLocator.availableLocations[i], newLocator.availableLocations[j] =
+			newLocator.availableLocations[j], newLocator.availableLocations[i]
+	})
 	return newLocator
 }
 
 // Create all the directedLocations that fit within the possible directions
 // the caller set.
 func (s *randomLocator) initialize(numCols, numRows int, possibleDirections Direction, rng *rand.Rand) {
+
+	s.rng = rng
 
 	var dlmatrix directedLocationMatrix
 	dlmatrix.initialize(numCols, numRows, possibleDirections)
