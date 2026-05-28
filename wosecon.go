@@ -252,7 +252,12 @@ func (s *wordSearchConstructor) validPlacement(wordInfo *wordInfo, location dire
 	} // else vertical
 
 	// Does it fit?
-	if endCol < 0 || endCol > s.numCols || endRow < 0 || endRow > s.numRows {
+	// For DOWN/LTR, endRow/endCol is "one past the last cell" (startRow+seqLen),
+	// so out-of-grid is > numRows / > numCols.
+	// For UP/RTL, endRow/endCol is "one before the last cell" (startRow-seqLen).
+	// The last cell ends up at endRow+1 / endCol+1, so the lowest legal value
+	// of endRow/endCol is -1 (last cell at index 0). Reject only when < -1.
+	if endCol < -1 || endCol > s.numCols || endRow < -1 || endRow > s.numRows {
 		/*
 			log.Printf("validPlacement %s doesn't fit; %s start=%d,%d end=%d,%d", wordInfo.text,
 				DirectionString(location.direction), startCol, startRow, endCol, endRow)
