@@ -147,7 +147,7 @@ func (s *wordSearchConstructor) construct() error {
 			}
 		}
 
-		if s.locateOne(currentWord) {
+		if s.locateOne(currentWord, currentWordIndex) {
 			if currentWordIndex == len(s.wordInfos)-1 {
 				// Finished
 				break
@@ -173,7 +173,10 @@ func (s *wordSearchConstructor) construct() error {
 }
 
 // Place one word into the puzzle. If it cannot, returns false.
-func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
+// currentWordIndex is the position of currentWord in s.wordInfos; it is used
+// by the forward-check that ensures every still-unplaced word has at least
+// one fitting location before the search commits to this placement.
+func (s *wordSearchConstructor) locateOne(currentWord *wordInfo, currentWordIndex int) bool {
 	//	log.Printf("locateOne %s mode=%s", currentWord.text, string(s.mode))
 
 	var localLocator *randomLocator
@@ -195,6 +198,17 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	for locationIndex := 0; locationIndex < localLocator.size(); locationIndex++ {
 		suitableLocation := localLocator.get(locationIndex)
 		if s.validPlacement(currentWord, suitableLocation) {
+			// Forward-check: if any still-unplaced word now has zero
+			// fitting locations, this placement is a dead end. Undo it,
+			// record the location as tested so we don't re-evaluate it
+			// on a subsequent backward-mode visit to this word, and
+			// continue searching for another placement.
+			if !s.remainingHaveFit(currentWordIndex) {
+				s.clearPlacement(currentWord)
+				currentWord.testedLocations = append(currentWord.testedLocations, suitableLocation)
+				currentWord.placement = nilDirectedLocation()
+				continue
+			}
 			if localLocator == &s.locator {
 				s.locator.removeN(locationIndex)
 			} else {
@@ -205,6 +219,62 @@ func (s *wordSearchConstructor) locateOne(currentWord *wordInfo) bool {
 	}
 	//	log.Printf("could not locateOne %s mode=%s", currentWord.text, string(s.mode))
 	return false
+}
+
+// canFit reports whether wordInfo would fit at location given the current
+// solution matrix. It is a pure read-only feasibility check — no state is
+// mutated. Used by the forward-check in locateOne.
+func (s *wordSearchConstructor) canFit(wordInfo *wordInfo, location directedLocation) bool {
+	var endCol, endRow, colAdj, rowAdj int
+
+	if location.direction&GoesDownward > 0 {
+		endRow = location.row + wordInfo.seqLen
+		rowAdj = 1
+	} else if location.direction&GoesUpward > 0 {
+		endRow = location.row - wordInfo.seqLen
+		rowAdj = -1
+	}
+
+	if location.direction&GoesLTR != 0 {
+		endCol = location.col + wordInfo.seqLen
+		colAdj = 1
+	} else if location.direction&GoesRTL != 0 {
+		endCol = location.col - wordInfo.seqLen
+		colAdj = -1
+	}
+
+	if endCol < -1 || endCol > s.numCols || endRow < -1 || endRow > s.numRows {
+		return false
+	}
+
+	col := location.col
+	row := location.row
+	for _, seqString := range wordInfo.seq.Items() {
+		if !s.solutionMatrix.isCellAvailableFor(col, row, seqString) {
+			return false
+		}
+		col += colAdj
+		row += rowAdj
+	}
+	return true
+}
+
+// remainingHaveFit reports whether every word with index > currentWordIndex
+// still has at least one location where it could be placed given the current
+// solution matrix. Because future placements can only consume more cells,
+// a word with no fit now will never have a fit, so this is a sound prune.
+func (s *wordSearchConstructor) remainingHaveFit(currentWordIndex int) bool {
+nextWord:
+	for i := currentWordIndex + 1; i < len(s.wordInfos); i++ {
+		wi := s.wordInfos[i]
+		for _, loc := range s.locator.availableLocations {
+			if s.canFit(wi, loc) {
+				continue nextWord
+			}
+		}
+		return false
+	}
+	return true
 }
 
 // Will this word fit in the puzzle at this directedLocation?
