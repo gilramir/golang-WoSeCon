@@ -98,6 +98,100 @@ You can use the cmd/mkwordsearch/mkwordsearch example tool to experiment:
 ./mkwordsearch 8 5 small.txt
 ```
 
+## The WordSearch result
+
+On success, `Construct` and `ConstructFromSequences` return a pointer to
+a `WordSearch` struct that contains everything needed to render the
+puzzle or check student answers:
+
+```go
+type WordSearch struct {
+    NumCols int
+    NumRows int
+
+    Sequences      map[string]Sequence
+    WordPlacements map[string]WordPlacement
+
+    AllPossibleWordPlacements     map[string][]WordPlacement
+    NumWordsWithMultipleSolutions int
+
+    SolutionRows [][]string
+    PuzzleRows   [][]string
+
+    TotalLetters  int
+    LetterDensity float64
+}
+```
+
+Fields:
+
+* **NumCols, NumRows** - grid size, the same values that were passed to
+    `Construct`.
+
+* **Sequences** - the input words keyed by their string form, paired
+    with the `Sequence` object that the constructor used to split each
+    word into cell-sized pieces. For the common case of one rune per
+    cell, this is a `RuneSequence`; for multi-rune cells (see the
+    "Cells with more than one Rune" section), this is whichever
+    `Sequence` implementation you supplied. Useful when rendering, to
+    iterate the cells in placement order without re-decoding the
+    string.
+
+* **WordPlacements** - the placement that the algorithm picked for each
+    word. The key is the word string and the value is a `WordPlacement`
+    containing the starting column, starting row, and direction:
+
+    ```go
+    type WordPlacement struct {
+        Col       int
+        Row       int
+        Direction Direction
+    }
+    ```
+
+    `WordPlacement.DirectionString()` returns a human-readable name
+    ("Down", "LTRHorizontal", etc.) for the direction.
+
+* **AllPossibleWordPlacements** - the same map shape as
+    `WordPlacements`, but includes *all* placements of the word that
+    can be found in the final puzzle, including ones that the random
+    filler happened to create. Each word's value is a slice because
+    one word may have several valid placements once filler is added.
+    If a short word is a substring of a longer word, the match is
+    credited to the longer word only.
+
+* **NumWordsWithMultipleSolutions** - the number of words whose entry
+    in `AllPossibleWordPlacements` has more than one element. A puzzle
+    with no random filler typically has `0` here; a puzzle whose
+    filler accidentally spells extra copies of a word will have
+    `> 0`. Useful as a quality signal when generating puzzles for
+    students.
+
+* **SolutionRows** - a `[][]string` view of the puzzle showing only
+    the words the algorithm placed; cells that would be filled by the
+    random filler are empty strings (`""`). The outer slice is rows
+    (y), the inner slice is columns (x), so to draw the grid you
+    iterate `SolutionRows[row][col]`.
+
+* **PuzzleRows** - the same shape as `SolutionRows`, but every cell is
+    filled — the words plus whatever filler the `FillUniformly*` or
+    `FillWeighted` option produced. Empty strings only appear if you
+    didn't pass a filler option.
+
+* **TotalLetters** - the sum of cell counts across the input word
+    list (`sum of seq.Len()`). Distinct from the number of *occupied*
+    grid cells, which is smaller when words overlap on shared
+    characters.
+
+* **LetterDensity** - `TotalLetters / (NumCols * NumRows)`. A value
+    of `1.0` means letters and cells balance exactly; values above
+    `1.0` mean the algorithm found an arrangement where words shared
+    cells. The "Density and search time" section below explains how
+    this number relates to construction time — `1.0` to `~1.3` is
+    the regime where you might want `WithParallelism(n)`, and above
+    `~1.3` is where you should expect `ErrCannotFitWords` for most
+    word lists.
+
 ## Options
 
 When running Constructor(), you can pass it options to control its behavior.

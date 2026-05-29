@@ -54,6 +54,18 @@ type WordSearch struct {
 	// First dimension is y (rows)
 	// Second dimension is x (column)
 	PuzzleRows [][]string
+
+	// Total cells used by all of the words (sum of seq.Len() across the
+	// input). Distinct from the count of *occupied* grid cells, which
+	// can be smaller when words overlap on shared characters.
+	TotalLetters int
+
+	// Letter density: TotalLetters / (NumCols * NumRows). A value of
+	// 1.0 means letters and cells balance exactly; values above 1.0
+	// mean the algorithm had to find an arrangement where words shared
+	// cells. The "Density and search time" section in the README
+	// explains how this number relates to construction time.
+	LetterDensity float64
 }
 
 // Indicate the placement of a word in the puzzle
@@ -74,6 +86,11 @@ func (s WordPlacement) DirectionString() string {
 // and return a WordSearch result which will be sent back to the caller
 func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 
+	totalLetters := 0
+	for _, wi := range s.wordInfos {
+		totalLetters += wi.seqLen
+	}
+
 	ws := &WordSearch{
 		NumCols:                   s.numCols,
 		NumRows:                   s.numRows,
@@ -82,6 +99,8 @@ func (s *wordSearchConstructor) translateToWordSearch() *WordSearch {
 		AllPossibleWordPlacements: make(map[string][]WordPlacement),
 		SolutionRows:              make([][]string, s.numRows),
 		PuzzleRows:                make([][]string, s.numRows),
+		TotalLetters:              totalLetters,
+		LetterDensity:             float64(totalLetters) / float64(s.numCols*s.numRows),
 	}
 
 	// Allocate the columns, filled with empty strings
