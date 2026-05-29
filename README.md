@@ -493,12 +493,12 @@ shapes of the same question.
 
 ## Errors
 
-The **Constructor** functions will return only a handful of specific errors, provided
-a constants starting with the name "Err". See the documentation for the values.
+The **Constructor** functions will return only a handful of specific errors,
+defined by a constant starting with the name "Err". See the `api.go` for the values.
 
 ## Cells with more than one Rune
 
-If you need to have more than one run per cell in the grid, you need to make a
+If you need to have more than one rune per cell in the grid, you need to make a
 Sequence for each "word", and use. I needed this when making a puzzle game for
 the Thai language, in which one "character" can be a combination of multiple
 Unicode code points.
