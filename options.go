@@ -6,6 +6,7 @@
 package wosecon
 
 import (
+	"runtime"
 	"slices"
 	"sort"
 	"time"
@@ -164,6 +165,36 @@ func WithTimeLimit(duration time.Duration) WordSearchOption {
 func WithMemoizationLimit(maxEntries int) WordSearchOption {
 	return func(constructor *wordSearchConstructor) error {
 		constructor.deadEndCacheCap = maxEntries
+		return nil
+	}
+}
+
+// Run the search in parallel across n goroutines, each starting from a
+// distinct RNG seed. The first goroutine to find a solution wins; the
+// others are cancelled. This helps in the "borderline density" regime
+// where a single seed may wander for a long time but a different seed
+// finds the answer quickly (see the "Density and search time" section
+// in the README).
+//
+// Semantics:
+//   - n == 0: use runtime.NumCPU() workers.
+//   - n == 1: equivalent to leaving the option off (single-threaded).
+//   - n  > 1: race that many workers.
+//   - n  < 0: treated as 1.
+//
+// Combining WithParallelism(n > 1) with RandomSeed returns
+// ErrSeedWithParallelism, because parallel workers each require an
+// independent seed and silently overriding the caller's seed would be
+// surprising.
+func WithParallelism(n int) WordSearchOption {
+	return func(constructor *wordSearchConstructor) error {
+		if n == 0 {
+			n = runtime.NumCPU()
+		}
+		if n < 1 {
+			n = 1
+		}
+		constructor.parallelism = n
 		return nil
 	}
 }

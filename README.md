@@ -229,6 +229,45 @@ The options are:
     further dead ends stop being recorded but existing entries still
     short-circuit lookups.
 
+    Note also that when combined with `WithParallelism(n)`, each
+    worker carries its own cache, so the worst-case memory cost is
+    `n * maxEntries` entries.
+
+* **WithParallelism(n int)** - race `n` independent searches in
+    parallel, each starting from a distinct RNG seed. The first
+    goroutine to find a solution wins; the others are cancelled. See
+    the "Density and search time" section below for the regime where
+    this helps and a measured table of the effect.
+
+    Semantics:
+
+    | `n` value | Behavior                                                |
+    |-----------|---------------------------------------------------------|
+    | `0`       | Use `runtime.NumCPU()` workers.                         |
+    | `1`       | Single-threaded (equivalent to leaving the option off). |
+    | `> 1`     | Race that many workers.                                 |
+    | `< 0`     | Treated as `1`.                                         |
+
+    Caveats:
+
+    - **Determinism is lost.** Which seed wins depends on goroutine
+      scheduling, so the returned solution will vary run to run even
+      with the same `Construct` arguments.
+    - **`RandomSeed` cannot be combined with `WithParallelism(n > 1)`.**
+      Each worker needs its own seed, and silently overriding a
+      caller-supplied seed would be surprising. Combining them
+      returns `ErrSeedWithParallelism` immediately, before any
+      search runs.
+    - **Memory scales with `n`.** Each worker has its own solution
+      matrix, locator, and (if enabled) dead-end cache. For typical
+      grids this is well under 1 MB per worker, but it composes
+      with `WithMemoizationLimit` as noted above.
+    - **No help below ~100% letter density or well above ~130%.**
+      Those regimes already finish in milliseconds. Parallelism
+      pays off in the borderline regime in between, where one seed
+      may wander for seconds while another stumbles onto a solution
+      immediately.
+
 ## Density and search time
 
 The WoSeCon algorithm is exhaustive backtracking — it walks the tree of
@@ -314,6 +353,37 @@ which drops the density into regime 1 and usually solves in
 milliseconds. The longer-form workarounds (different random seeds,
 longer time limits, enabling more directions) help occasionally; a
 slightly bigger grid almost always does.
+
+### Parallel search
+
+If you cannot enlarge the grid, the second-best lever is
+`WithParallelism(n)`. Regime 2 is high-variance in the random seed:
+one seed may take ~10 seconds while another solves the same puzzle
+in milliseconds. Racing several seeds in parallel takes the
+*minimum* of those times rather than the average.
+
+Five trials per parallelism level on the 7×7 / 114% case from the
+table above (each trial uses a fresh per-process seed), 15-second
+per-run cap, same Ryzen 7 8845HS as above:
+
+| Parallelism | Min   | Median | Max    |
+|-------------|-------|--------|--------|
+| 1           | 83 ms | 12 s   | >15 s  |
+| 2           |  4 ms | 720 ms | 2.9 s  |
+| 4           |  8 ms | 27 ms  | 86 ms  |
+| 8           | 10 ms | 40 ms  | 2.6 s  |
+
+Going from `WithParallelism(1)` to `WithParallelism(4)` cut the
+median runtime by roughly 400×. Going from 4 to 8 didn't help on
+this case (and was slightly worse on the worst trial) — once the
+variance is mostly squeezed out, additional workers just compete
+for CPU.
+
+This won't make a puzzle that legitimately has no solution finish
+any faster, won't help below ~100% density (the search already
+finishes instantly), and won't rescue the well-above-130% no-fit
+cases (the algorithm already proves them quickly). It is precisely
+the borderline regime that benefits.
 
 To re-measure on your own machine — or after changes to the
 algorithm — build and run the probe:

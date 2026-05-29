@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"sync/atomic"
 	"time"
 )
 
@@ -56,6 +57,17 @@ type wordSearchConstructor struct {
 
 	// Optional time limit
 	timeLimit time.Duration
+
+	// Number of parallel search workers. 1 (or unset) means single-threaded;
+	// > 1 means ConstructFromSequences will race that many goroutines, each
+	// with its own RNG seed, and return the first solution found. See
+	// WithParallelism.
+	parallelism int
+
+	// When non-nil and set to true by a sibling goroutine, the search loop
+	// exits with errCancelled. Used by parallel construction to stop losing
+	// workers as soon as another one finds a solution.
+	cancelled *atomic.Bool
 
 	// Memoized dead-end states. Key is (cell-state fingerprint, current
 	// word index): a state from which no completion of the remaining
@@ -179,6 +191,11 @@ func (s *wordSearchConstructor) construct() error {
 			default:
 				// keep going
 			}
+		}
+
+		// Cancelled by a sibling worker in parallel mode?
+		if s.cancelled != nil && s.cancelled.Load() {
+			return errCancelled
 		}
 
 		if s.tryPlace(currentWord, currentWordIndex) {

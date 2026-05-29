@@ -20,7 +20,14 @@ const (
 	ErrWordIsTooLong           ErrorString = "at least one word is larger than the grid dimensions"
 	ErrFillerWeightNotPositive ErrorString = "at least one filler string's weight is <= 0"
 	ErrReachedTimeLimit        ErrorString = "reached time limit before finding solution"
+	ErrSeedWithParallelism     ErrorString = "RandomSeed cannot be combined with WithParallelism(n > 1); parallel workers each need an independent seed"
 )
+
+// errCancelled is an internal sentinel returned by construct() when a
+// sibling worker has already found a solution and signalled the rest to
+// stop. It is never returned to callers — the parallel orchestrator
+// filters it out before returning the final error.
+const errCancelled ErrorString = "cancelled by sibling worker"
 
 // Construct a WordSearch, where each word is a Go string.
 // One rune fits in one puzzle cell.
@@ -38,20 +45,28 @@ func Construct(numCols int, numRows int, words []string, opts ...WordSearchOptio
 // Construct a WordSerch, where each word is a slice of objects that are
 // comparable. One object fits in one puzzle cell.
 func ConstructFromSequences(numCols int, numRows int, sequences []Sequence, opts ...WordSearchOption) (*WordSearch, error) {
-	var constructor wordSearchConstructor
-
 	if numRows < 3 || numCols < 3 {
 		return nil, ErrSmallerThanMinimumSize
 	}
 
-	err := constructor.init(numCols, numRows, sequences, opts...)
-	if err != nil {
-		return nil, err
-	}
-	err = constructor.construct()
-	if err != nil {
+	// Apply options once on a probe constructor so we can detect
+	// WithParallelism + RandomSeed conflicts before launching workers,
+	// and so we can re-use the constructor on the single-threaded path
+	// without paying init twice.
+	var constructor wordSearchConstructor
+	if err := constructor.init(numCols, numRows, sequences, opts...); err != nil {
 		return nil, err
 	}
 
+	if constructor.parallelism > 1 {
+		if constructor.randomSeedGiven {
+			return nil, ErrSeedWithParallelism
+		}
+		return constructParallel(numCols, numRows, sequences, opts, constructor.parallelism)
+	}
+
+	if err := constructor.construct(); err != nil {
+		return nil, err
+	}
 	return constructor.translateToWordSearch(), nil
 }
