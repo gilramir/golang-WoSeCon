@@ -241,6 +241,24 @@ The useful single number is the **letter density**: total letters in
 the word list divided by grid cells. Densities above 100% mean a valid
 puzzle is only possible if words share cells.
 
+In Go, computing the score for a list of words is straightforward.
+Count *cells*, not bytes — use `len([]rune(w))` so multi-byte characters
+(Korean, accented Latin, etc.) count as one cell each:
+
+```go
+totalCells := 0
+for _, w := range words {
+    totalCells += len([]rune(w))
+}
+density := 100.0 * float64(totalCells) / float64(numCols*numRows)
+fmt.Printf("letter density: %.0f%%\n", density)
+```
+
+If you are using `ConstructFromSequences` with multi-rune cells (the
+Thai case described below), substitute `seq.Len()` for
+`len([]rune(w))` so each `Sequence` contributes its cell count rather
+than its rune count.
+
 Three regimes show up in practice:
 
 1. **Below ~100% density.** Solutions are abundant; the first valid
