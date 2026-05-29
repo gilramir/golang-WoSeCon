@@ -265,7 +265,13 @@ Three regimes show up in practice:
 The `cmd/densityprobe` program in this repository measures all three
 regimes against a fixed list of 12 short English words (56 letters
 total, no palindromes, no reverse-pairs), sweeping grid size to vary
-density. Three random seeds per grid, 15-second per-run cap:
+density. Three random seeds per grid, 15-second per-run cap. The
+numbers below were measured on an AMD Ryzen 7 8845HS (16 logical CPUs,
+boost ~5.1 GHz) running Go 1.25.1 on Linux — single-threaded, so the
+core count doesn't matter; the per-core speed does. On slower silicon
+expect the milliseconds to scale up roughly with single-thread
+performance, and on a thermally-limited laptop expect the `>15 s`
+rows to stay at the cap regardless:
 
 | Grid  | Cells | Letter density | seed=0 | seed=1 | seed=2 |
 |-------|------:|---------------:|--------|--------|--------|
